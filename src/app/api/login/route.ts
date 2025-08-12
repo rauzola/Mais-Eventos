@@ -11,7 +11,9 @@ interface LoginProps {
 }
 
 export interface LoginResponse {
-  session: string;
+  session?: string;
+  error?: string;
+  authenticated?: boolean;
 }
 
 export const revalidate = 0;
@@ -22,7 +24,8 @@ export const revalidate = 0;
  * Retorna 401 se não permitir a autenticação e 200 se permitir
  */
 export async function GET(request: NextRequest) {
-  const authCookie = cookies().get("auth-session");
+  const cookieStore = await cookies();
+  const authCookie = cookieStore.get("auth-session");
 
   const sessionToken = authCookie?.value || "";
 
@@ -34,45 +37,58 @@ export async function GET(request: NextRequest) {
   });
 
   if (!session || !session.valid || session.expiresAt < new Date()) {
-    return NextResponse.json({}, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  return NextResponse.json({}, { status: 200 });
+  return NextResponse.json({ authenticated: true }, { status: 200 });
 }
 
 /**
  * Realiza o login
  */
 export async function POST(request: Request) {
-  const body = (await request.json()) as LoginProps;
-
-  const { email, password } = body;
-
-  if (!email || !password) {
-    return NextResponse.json<LoginResponse>({ session: "" }, { status: 400 });
-  }
-
   try {
-    const prisma = PrismaGetInstance();
+    const body = (await request.json()) as LoginProps;
 
-    const user = await prisma.user.findUniqueOrThrow({
-      where: {
-        email,
-      },
-    });
+    const { email, password } = body;
 
-    const userPassword = user.password;
-    const passwordResult = bcrypt.compareSync(password, userPassword);
-
-    if (!passwordResult) {
-      return NextResponse.json<LoginResponse>({ session: "" }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json<LoginResponse>(
+        { error: "Email e senha são obrigatórios" }, 
+        { status: 400 }
+      );
     }
 
-    const sessionToken = GenerateSession({
-      email,
-      passwordHash: userPassword,
+    const prisma = PrismaGetInstance();
+
+    // Busca o usuário
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
     });
 
+    if (!user) {
+      return NextResponse.json<LoginResponse>(
+        { error: "Credenciais inválidas" }, 
+        { status: 401 }
+      );
+    }
+
+    // Verifica a senha
+    const passwordMatch = bcrypt.compareSync(password, user.password);
+    if (!passwordMatch) {
+      return NextResponse.json<LoginResponse>(
+        { error: "Credenciais inválidas" }, 
+        { status: 401 }
+      );
+    }
+
+    // Gera token de sessão
+    const sessionToken = GenerateSession({
+      email,
+      passwordHash: user.password,
+    });
+
+    // Cria a sessão no banco
     await prisma.sessions.create({
       data: {
         userId: user.id,
@@ -82,7 +98,9 @@ export async function POST(request: Request) {
       },
     });
 
-    cookies().set({
+    // Define o cookie
+    const cookieStore = await cookies();
+    cookieStore.set({
       name: "auth-session",
       value: sessionToken,
       httpOnly: true,
@@ -90,8 +108,12 @@ export async function POST(request: Request) {
       path: "/",
     });
 
-    return NextResponse.json({ session: "dfasdfas" }, { status: 200 });
+    return NextResponse.json({ session: sessionToken }, { status: 200 });
   } catch (error) {
-    return NextResponse.json<LoginResponse>({ session: "" }, { status: 400 });
+    console.error("Erro no login:", error);
+    return NextResponse.json<LoginResponse>(
+      { error: "Erro interno do servidor" }, 
+      { status: 500 }
+    );
   }
 }

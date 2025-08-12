@@ -14,7 +14,7 @@ export function GenerateSession({
   email,
   passwordHash,
 }: GenerateSessionDTO): string {
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SUPABASE_JWT_SECRET || "default-secret-key";
 
   const plainToken = `${secret}+${email}+${passwordHash}+${new Date().getTime()}`;
 

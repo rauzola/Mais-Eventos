@@ -1,13 +1,32 @@
-import { Pool } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-/**
- * Gera uma instância do banco de dados com o adaptador serverless Neon
- */
-export function PrismaGetInstance(): PrismaClient {
-  const pool = new Pool({ connectionString: process.env.POSTGRES_PRISMA_URL });
-  const adapter = new PrismaNeon(pool);
-  const prisma = new PrismaClient({ adapter });
 
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+let prisma: PrismaClient;
+
+if (process.env.NODE_ENV === "production") {
+  prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.POSTGRES_URL,
+      },
+    },
+  });
+} else {
+  if (!global.prisma) {
+    global.prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.POSTGRES_URL,
+        },
+      },
+    });
+  }
+  prisma = global.prisma;
+}
+
+export function PrismaGetInstance(): PrismaClient {
   return prisma;
 }

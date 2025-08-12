@@ -1,11 +1,8 @@
+// /app/api/register/route.ts
+
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { PrismaGetInstance } from "@/lib/prisma-pg";
-import { User } from "@prisma/client";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { GenerateSession } from "@/lib/generate-session";
-import { addHours } from "date-fns";
-import { cookies } from "next/headers";
 
 interface RegisterProps {
   email: string;
@@ -15,80 +12,132 @@ interface RegisterProps {
 
 export interface RegisterResponse {
   error?: string;
-  user?: User;
+  user?: {
+    id: string;
+    email: string;
+  };
+  message?: string;
 }
 
 /**
- * Realiza o cadastro
+ * Realiza o cadastro simplificado com email e senha
  */
 export async function POST(request: Request) {
-  const body = (await request.json()) as RegisterProps;
-
-  const { email, password, password2 } = body;
-
-  if (!email || !password || !password2) {
-    return NextResponse.json(
-      { error: "missing required fields" },
-      { status: 400 }
-    );
-  }
-
-  const emailReg = new RegExp(
-    "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
-  );
-
-  if (!emailReg.test(email)) {
-    return NextResponse.json({ error: "invalid email" }, { status: 400 });
-  }
-
-  if (password.length < 8 || password !== password2) {
-    return NextResponse.json({ error: "invalid password" }, { status: 400 });
-  }
-
-  const hash = bcrypt.hashSync(password, 12);
-
   try {
+    console.log("=== INÍCIO DO REGISTRO ===");
+    
+    const body = (await request.json()) as RegisterProps;
+    console.log("Dados recebidos:", { 
+      email: body.email, 
+      passwordLength: body.password.length 
+    });
+
+    const { email, password, password2 } = body;
+
+    // Verifica se todos os campos obrigatórios estão presentes
+    if (!email || !password || !password2) {
+      console.log("❌ Campos obrigatórios faltando");
+      return NextResponse.json(
+        { error: "Email e senha são obrigatórios" },
+        { status: 400 }
+      );
+    }
+
+    console.log("✅ Validações básicas passaram");
+
+    // Validação da senha
+    if (password.length < 6) {
+      console.log("❌ Senha muito curta:", password.length);
+      return NextResponse.json(
+        { error: "A senha deve ter pelo menos 6 caracteres" },
+        { status: 400 }
+      );
+    }
+
+    if (password !== password2) {
+      console.log("❌ Senhas não coincidem");
+      return NextResponse.json(
+        { error: "As senhas não coincidem" },
+        { status: 400 }
+      );
+    }
+
+    console.log("✅ Validações de senha passaram");
+    
+    // Hash da senha
+    const hash = bcrypt.hashSync(password, 12);
+    console.log("✅ Hash da senha gerado");
+
+    console.log("🔌 Conectando ao banco de dados...");
     const prisma = PrismaGetInstance();
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hash,
-      },
-    });
-
-    const sessionToken = GenerateSession({
-      email,
-      passwordHash: hash,
-    });
-
-    await prisma.sessions.create({
-      data: {
-        userId: user.id,
-        token: sessionToken,
-        valid: true,
-        expiresAt: addHours(new Date(), 24),
-      },
-    });
-
-    cookies().set({
-      name: "auth-session",
-      value: sessionToken,
-      httpOnly: true,
-      expires: addHours(new Date(), 24),
-      path: "/",
-    });
-
-    return NextResponse.json({ user }, { status: 200 });
-  } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        // usuário já existe
-        return NextResponse.json(
-          { error: "user already exists" },
-          { status: 400 }
-        );
-      }
+    // Testa a conexão
+    try {
+      await prisma.$connect();
+      console.log("✅ Conexão com banco estabelecida");
+    } catch (dbError) {
+      console.error("❌ Erro na conexão com banco:", dbError);
+      return NextResponse.json(
+        { error: "Erro na conexão com banco de dados" },
+        { status: 500 }
+      );
     }
+
+    // Verifica se o usuário já existe
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    if (existingUser) {
+      console.log("❌ Usuário já existe");
+      return NextResponse.json(
+        { error: "Este email já está cadastrado" },
+        { status: 400 }
+      );
+    }
+
+    // Cria o usuário no banco de dados
+    console.log("📝 Criando usuário no banco...");
+    
+    const userData = {
+      email: email.toLowerCase(),
+      password: hash,
+    };
+
+    console.log("Dados do usuário a serem inseridos:", {
+      ...userData,
+      password: "[HIDDEN]"
+    });
+
+    const user = await prisma.user.create({
+      data: userData,
+    });
+
+    console.log("✅ Usuário criado com sucesso:", user.id);
+
+    return NextResponse.json(
+      {
+        message: "Usuário criado com sucesso!",
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("=== ERRO NO REGISTRO ===");
+    console.error("Tipo do erro:", typeof error);
+    console.error("Erro:", error);
+    
+    if (error instanceof Error) {
+      console.error("Mensagem:", error.message);
+      console.error("Stack:", error.stack);
+    }
+    
+    return NextResponse.json(
+      { error: "Erro interno do servidor. Verifique os logs." },
+      { status: 500 }
+    );
   }
 }
