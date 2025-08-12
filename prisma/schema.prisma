@@ -16,83 +16,10 @@ datasource db {
 }
 
 model User {
-  id                        String   @id @default(cuid())
-  email                     String   @unique
-  password                  String
-  Sessions                  Sessions[]
-  status                    String   @default("ativo") // 'ativo', 'inativo'
-  nome                      String
-  cpf                       String   @unique
-  data_nascimento           DateTime
-  estado_civil              String
-  profissao                 String
-  telefone_contato          String
-  contato_emergencia        String
-  telefone_contato_emergencia String
-  tamanho_camiseta          String
-  tipo_usuario              String   @default("campista") // 'campista', 'equipe', 'admin'
-  data_criacao              DateTime @default(now())
-  Saude                     Saude?
-  Inscricoes                Inscricao[]
-  ComunidadeId              Int?
-  Comunidade                Comunidade? @relation(fields: [ComunidadeId], references: [id])
-}
-
-model Comunidade {
-  id            Int      @id @default(autoincrement())
-  nome          String
-  dataAcampa1   DateTime?
-  nomeAcampa2   String?
-  dataAcampa2   DateTime?
-  dataEnvio     DateTime?
-  assessores    String   // Nomes dos assessores
-  Membros       User[]   // Relacionamento com usuários (não precisa do @relation)
-}
-
-model Saude {
-  id                    Int     @id @default(autoincrement())
-  userId                String  @unique
-  portadorDoenca        Boolean @default(false)
-  doencas               String?
-  alergias              Boolean @default(false)
-  alergiasDetalhe       String?
-  medicacao             Boolean @default(false)
-  medicamentos          String?
-  planoSaude            Boolean @default(false)
-  operadoraPlano        String?
-  numeroInscricaoPlano  String?
-  User                  User    @relation(fields: [userId], references: [id])
-}
-
-model Evento {
-  id          String    @id @default(cuid())
-  nome        String
-  descricao   String
-  dataInicio  DateTime
-  horaInicio  DateTime
-  horaFim     DateTime
-  local       String
-  status      String   @default("aberto") // 'aberto', 'fechado', 'finalizado'
-  Inscricoes  Inscricao[]
-}
-
-model Inscricao {
-  id            String      @id @default(cuid())
-  userId        String
-  eventoId      String   // Alterado para String
-  status        String   @default("pendente") // 'pendente', 'confirmada', 'cancelada'
-  dataInscricao DateTime @default(now())
-  User          User     @relation(fields: [userId], references: [id])
-  Evento        Evento   @relation(fields: [eventoId], references: [id])
-  Presencas     Presenca[]
-}
-
-model Presenca {
-  id           Int      @id @default(autoincrement())
-  inscricaoId  String
-  dataPresenca DateTime @default(now())
-  status       String   @default("ausente") // 'presente', 'ausente'
-  Inscricao    Inscricao @relation(fields: [inscricaoId], references: [id])
+  id       String     @id @default(cuid())
+  email    String     @unique
+  password String
+  Sessions Sessions[]
 }
 
 model Sessions {

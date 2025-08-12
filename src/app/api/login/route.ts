@@ -1,9 +1,6 @@
-// /app/api/login/route.ts
-
-
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { PrismaGetInstance } from "@/lib/prisma";
+import { PrismaGetInstance } from "@/lib/prisma-pg";
 import { cookies } from "next/headers";
 import { GenerateSession } from "@/lib/generate-session";
 import { addHours } from "date-fns";
@@ -25,30 +22,23 @@ export const revalidate = 0;
  * Retorna 401 se não permitir a autenticação e 200 se permitir
  */
 export async function GET(request: NextRequest) {
-    const cookieStore = await cookies();
-    const authCookie = cookieStore.get("auth-session");
-  
-    if (!authCookie?.value) {
-      // Redireciona para o login caso o cookie não exista
-      return NextResponse.redirect("/login");
-    }
-  
-    const sessionToken = authCookie.value;
-    const prisma = PrismaGetInstance();
-    const session = await prisma.sessions.findFirst({
-      where: {
-        token: sessionToken,
-      },
-    });
-  
-    if (!session || !session.valid || session.expiresAt < new Date()) {
-      // Redireciona para o login caso a sessão seja inválida ou tenha expirado
-      return NextResponse.redirect("/login");
-    }
-  
-    return NextResponse.json({ message: "Bem-vindo!" }, { status: 200 });
+  const authCookie = cookies().get("auth-session");
+
+  const sessionToken = authCookie?.value || "";
+
+  const prisma = PrismaGetInstance();
+  const session = await prisma.sessions.findFirst({
+    where: {
+      token: sessionToken,
+    },
+  });
+
+  if (!session || !session.valid || session.expiresAt < new Date()) {
+    return NextResponse.json({}, { status: 401 });
   }
-  
+
+  return NextResponse.json({}, { status: 200 });
+}
 
 /**
  * Realiza o login
@@ -88,21 +78,19 @@ export async function POST(request: Request) {
         userId: user.id,
         token: sessionToken,
         valid: true,
-        expiresAt: addHours(new Date(), 24),  // Expiração do banco de dados para 24 horas
+        expiresAt: addHours(new Date(), 24),
       },
     });
 
-    // Aguarde a resolução do cookies antes de definir o cookie
-    const cookieStore = await cookies();
-    cookieStore.set({
+    cookies().set({
       name: "auth-session",
       value: sessionToken,
       httpOnly: true,
-      expires: addHours(new Date(), 1),  // Expiração do cookie para 1 hora
+      expires: addHours(new Date(), 24),
       path: "/",
     });
 
-    return NextResponse.json({ session: sessionToken }, { status: 200 });
+    return NextResponse.json({ session: "dfasdfas" }, { status: 200 });
   } catch (error) {
     return NextResponse.json<LoginResponse>({ session: "" }, { status: 400 });
   }
