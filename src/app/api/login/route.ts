@@ -23,7 +23,7 @@ export const revalidate = 0;
  * Verifica se a sessão existe, se não expirou e se ainda está válida
  * Retorna 401 se não permitir a autenticação e 200 se permitir
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   const cookieStore = await cookies();
   const authCookie = cookieStore.get("auth-session");
 

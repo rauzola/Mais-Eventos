@@ -8,7 +8,7 @@ export default async function Home() {
     await axios.get(`${process.env.API_URL}/login`, {
       headers: headers() as unknown as AxiosHeaders,
     });
-  } catch (error) {
+  } catch {
     redirect("/login");
   }
 
