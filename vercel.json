@@ -6,10 +6,5 @@
     "src/app/api/**/*.ts": {
       "maxDuration": 30
     }
-  },
-  "env": {
-    "POSTGRES_URL": "@postgres_url",
-    "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling",
-    "SUPABASE_JWT_SECRET": "@supabase_jwt_secret"
   }
 }
