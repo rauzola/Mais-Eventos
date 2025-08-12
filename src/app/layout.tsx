@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ORBIT - Auth - Email",
-  description: "Projeto para demonstrar a autenticação com email",
+  title: "Mais Eventos - Projeto Mais Vida",
+  description: "Projeto para o Projeto Mais Vida",
 };
 
 export default function RootLayout({

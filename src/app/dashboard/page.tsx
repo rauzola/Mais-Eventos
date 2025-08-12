@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PrismaGetInstance } from "@/lib/prisma-pg";
+import { LogoutButton } from "@/components/LogoutButton";
 
 export default async function Dashboard() {
   // Verifica se o usuário está autenticado
@@ -70,12 +71,7 @@ export default async function Dashboard() {
           </div>
 
           <div className="mt-6 text-center">
-            <a 
-              href="/api/auth/logout" 
-              className="inline-block bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Sair
-            </a>
+            <LogoutButton />
           </div>
         </div>
       </div>

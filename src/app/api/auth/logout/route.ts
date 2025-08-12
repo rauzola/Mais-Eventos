@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { PrismaGetInstance } from "@/lib/prisma-pg";
+import { redirect } from "next/navigation";
+
+export async function GET() {
+  return await handleLogout();
+}
 
 export async function POST() {
+  return await handleLogout();
+}
+
+async function handleLogout() {
   try {
     const cookieStore = await cookies();
     const authSession = cookieStore.get("auth-session");
@@ -24,12 +33,11 @@ export async function POST() {
     // Remove o cookie
     cookieStore.delete("auth-session");
 
-    return NextResponse.json({ message: "Logout realizado com sucesso" });
+    // Redireciona para a página de login
+    return NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"));
   } catch (error) {
     console.error("Erro no logout:", error);
-    return NextResponse.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+    // Em caso de erro, ainda redireciona para login
+    return NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"));
   }
 }
