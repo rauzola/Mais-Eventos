@@ -97,6 +97,7 @@ export function LoginForm() {
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
+            
             Entre com suas credenciais para acessar sua conta.
           </CardDescription>
         </CardHeader>
