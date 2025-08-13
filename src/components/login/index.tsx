@@ -64,10 +64,11 @@ export function LoginForm() {
           setFormLoading(false);
           setFormSuccess(true);
           
-          // Aguarda 1 segundo antes de redirecionar
+          // Aguarda 1 segundo antes de redirecionar e força refresh do layout
           setTimeout(() => {
             router.push("/dashboard");
-          }, 1000);
+            router.refresh();
+          }, 500);
           
         } catch (error) {
           // Tratamento de erro melhorado
