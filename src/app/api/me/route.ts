@@ -16,9 +16,8 @@ export async function GET() {
 
     if (!session?.User) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-    const { id, email } = session.User;
-    // @ts-expect-error role existe no schema
-    const role = session.User.role as string | undefined;
+    const { id, email } = session.User as { id: string; email: string };
+    const role = (session.User as unknown as { role?: string })?.role;
 
     return NextResponse.json({ id, email, role: role ?? "USER" }, { status: 200 });
   } catch (error) {
