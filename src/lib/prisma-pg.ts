@@ -1,11 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 
-declare global {
-  var prisma: PrismaClient | undefined;
-}
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-const prismaClientSingleton = () => {
-  return new PrismaClient({
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+function createPrismaClient() {
+  const client = new PrismaClient({
     datasources: {
       db: {
         url: process.env.POSTGRES_URL,
@@ -13,16 +15,28 @@ const prismaClientSingleton = () => {
     },
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
-};
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+  // Configurações específicas para produção/Vercel
+  if (process.env.NODE_ENV === "production") {
+    // Desabilita prepared statements para evitar o erro
+    client.$connect();
+    
+    // Cleanup na desconexão
+    process.on("beforeExit", async () => {
+      await client.$disconnect();
+    });
+  }
 
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+  return client;
+}
 
 export function PrismaGetInstance(): PrismaClient {
   return prisma;
+}
+
+// Função para limpar conexões (útil para Vercel)
+export async function cleanupPrisma() {
+  if (process.env.NODE_ENV === "production") {
+    await prisma.$disconnect();
+  }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { prisma } from "@/lib/prisma-pg";
+import { prisma, cleanupPrisma } from "@/lib/prisma-pg";
 import { cookies } from "next/headers";
 import { GenerateSession } from "@/lib/generate-session";
 import { addHours } from "date-fns";
@@ -52,6 +52,11 @@ export async function GET() {
   } catch (error) {
     console.error("Erro na verificação de autenticação:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
+  } finally {
+    // Cleanup em produção
+    if (process.env.NODE_ENV === "production") {
+      await cleanupPrisma();
+    }
   }
 }
 
@@ -128,5 +133,10 @@ export async function POST(request: Request) {
       { error: "Erro interno do servidor" }, 
       { status: 500 }
     );
+  } finally {
+    // Cleanup em produção
+    if (process.env.NODE_ENV === "production") {
+      await cleanupPrisma();
+    }
   }
 }
