@@ -28,8 +28,7 @@ export default async function RootLayout({
         where: { token, valid: true, expiresAt: { gt: new Date() } },
         include: { User: true },
       });
-      // @ts-expect-error role existe no schema
-      role = (session?.User?.role as typeof role) || "USER";
+      role = (session?.User as unknown as { role?: typeof role })?.role || "USER";
     } catch {}
   }
   return (
