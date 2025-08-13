@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { prisma, cleanupPrisma } from "@/lib/prisma-pg";
+import { prisma, cleanupPrisma } from "@/lib/prisma-vercel";
 import { cookies } from "next/headers";
 import { GenerateSession } from "@/lib/generate-session";
 import { addHours } from "date-fns";
