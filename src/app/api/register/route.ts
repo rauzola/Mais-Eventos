@@ -3,11 +3,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { PrismaGetInstance } from "@/lib/prisma-pg";
+import { Role } from "@prisma/client";
 
 interface RegisterProps {
   email: string;
   password: string;
   password2: string;
+  role?: Role; // opcional, padrão USER
 }
 
 export interface RegisterResponse {
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
       passwordLength: body.password.length 
     });
 
-    const { email, password, password2 } = body;
+    const { email, password, password2, role } = body;
 
     // Verifica se todos os campos obrigatórios estão presentes
     if (!email || !password || !password2) {
@@ -102,6 +104,7 @@ export async function POST(request: Request) {
     const userData = {
       email: email.toLowerCase(),
       password: hash,
+      role: role && Object.values(Role).includes(role) ? role : Role.USER,
     };
 
     console.log("Dados do usuário a serem inseridos:", {
@@ -121,6 +124,7 @@ export async function POST(request: Request) {
         user: {
           id: user.id,
           email: user.email,
+          role: user.role,
         },
       },
       { status: 201 }

@@ -13,12 +13,21 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+enum Role {
+  USER
+  STAFF
+  COORD
+  CONCELHO
+  ADMIN
+}
+
 model User {
   id        String     @id @default(cuid())
   email     String     @unique
   password  String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  role      Role       @default(USER)
   Sessions  Sessions[]
   
   @@map("users")

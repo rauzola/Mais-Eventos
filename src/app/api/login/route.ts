@@ -14,6 +14,7 @@ export interface LoginResponse {
   session?: string;
   error?: string;
   authenticated?: boolean;
+  role?: string;
 }
 
 export const revalidate = 0;
@@ -48,7 +49,8 @@ export async function GET() {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    return NextResponse.json({ authenticated: true }, { status: 200 });
+      // opcionalmente poderíamos retornar a role com base no userId da sessão, mas manter simples aqui
+      return NextResponse.json({ authenticated: true }, { status: 200 });
   } catch (error) {
     console.error("Erro na verificação de autenticação:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
@@ -114,7 +116,7 @@ export async function POST(request: Request) {
     });
 
     // Define o cookie
-    const response = NextResponse.json({ session: sessionToken }, { status: 200 });
+    const response = NextResponse.json({ session: sessionToken, role: user.role }, { status: 200 });
     
     response.cookies.set({
       name: "auth-session",

@@ -31,6 +31,9 @@ export default async function Dashboard() {
       redirect("/login");
     }
 
+    type SessionWithUser = typeof session & { User: { role?: string } };
+    const userRole = (session as SessionWithUser)?.User?.role || undefined;
+
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-4xl mx-auto">
@@ -65,7 +68,8 @@ export default async function Dashboard() {
                 </h3>
                 <p className="text-purple-800">
                   ID do usuário: <strong>{session.User.id}</strong><br />
-                  Criado em: <strong>{session.User.createdAt.toLocaleDateString('pt-BR')}</strong>
+                  Criado em: <strong>{session.User.createdAt.toLocaleDateString('pt-BR')}</strong><br />
+                  Permissão: <strong>{userRole ?? "USER"}</strong>
                 </p>
               </div>
             </div>
