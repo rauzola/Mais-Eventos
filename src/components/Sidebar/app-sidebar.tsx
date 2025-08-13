@@ -179,18 +179,15 @@ function can(role: AppRole, required: AppRole): boolean {
 
 export function AppSidebar({ role, ...props }: React.ComponentProps<typeof Sidebar> & { role: AppRole }) {
 
-  const adminOnly = { title: "Administração", url: "/admin", icon: SquareTerminal, items: [{
-    title: "ADMIN",
-    url: "#",
+  const adminOnly = {
+    title: "Administração",
+    url: "/admin",
     icon: SquareTerminal,
     items: [
-      {
-        title: "ADMIN",
-        url: "/admin",
-      }, 
-    
+      { title: "Admin", url: "/admin" },
+      { title: "Usuários", url: "/admin/usuarios" },
     ],
-  }, ] };
+  };
   
 
   type NavItem = { title: string; url: string; icon?: LucideIcon; items?: { title: string; url: string }[] };
