@@ -13,20 +13,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios, { AxiosError } from "axios";
-import { LoaderPinwheel, AlertCircle, CheckCircle } from "lucide-react";
+import { Heart, Mail, Lock, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useCallback, useRef, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 
 export function LoginForm() {
-  // Router serve para fazer redirect de páginas
   const router = useRouter();
 
-  // Referência para os inputs
-  const emailInputRef = useRef<HTMLInputElement>(null);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
-
   // Estados do formulário
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
@@ -34,128 +31,155 @@ export function LoginForm() {
   // Função que realiza o login ao enviar o formulário
   const handleLoginSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
-      // Previne o envio do formulário pelo navegador
       event.preventDefault();
-      // Reseta os estados do formulário
       setFormError("");
       setFormLoading(true);
 
-      // Verifica se os inputs existem na página
-      if (emailInputRef.current && passwordInputRef.current) {
-        // Pega os valores preenchidos nos inputs
-        const email = emailInputRef.current.value;
-        const pass1 = passwordInputRef.current.value;
+      // Validações básicas
+      if (!email || !password) {
+        setFormError("Email e senha são obrigatórios.");
+        setFormLoading(false);
+        return;
+      }
 
-        // Validações básicas
-        if (!email || !pass1) {
-          setFormError("Email e senha são obrigatórios.");
-          setFormLoading(false);
-          return;
-        }
+      try {
+        // tenta realizar o login
+        await axios.post<LoginResponse>("/api/login", {
+          email,
+          password,
+        });
 
-        try {
-          // tenta realizar o login
-          const response = await axios.post<LoginResponse>("/api/login", {
-            email,
-            password: pass1,
-          });
-
-          // se chegar aqui, o login deu certo
-          setFormLoading(false);
-          setFormSuccess(true);
+        // se chegar aqui, o login deu certo
+        setFormLoading(false);
+        setFormSuccess(true);
+        
+        // Aguarda 1 segundo antes de redirecionar e força refresh do layout
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 500);
+        
+      } catch (error) {
+        // Tratamento de erro melhorado
+        if (error instanceof AxiosError) {
+          const { error: errorMessage } = error.response?.data as LoginResponse;
           
-          // Aguarda 1 segundo antes de redirecionar e força refresh do layout
-          setTimeout(() => {
-            router.push("/dashboard");
-            router.refresh();
-          }, 500);
-          
-        } catch (error) {
-          // Tratamento de erro melhorado
-          if (error instanceof AxiosError) {
-            const { error: errorMessage } = error.response?.data as LoginResponse;
-            
-            if (errorMessage === "Credenciais inválidas") {
-              setFormError("Email ou senha incorretos.");
-            } else {
-              setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
-            }
+          if (errorMessage === "Credenciais inválidas") {
+            setFormError("Email ou senha incorretos.");
           } else {
-            setFormError("Erro inesperado. Tente novamente.");
+            setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
           }
-          
-          setFormLoading(false);
-          setFormSuccess(false);
+        } else {
+          setFormError("Erro inesperado. Tente novamente.");
         }
+        
+        setFormLoading(false);
+        setFormSuccess(false);
       }
     },
-    [router]
+    [email, password, router]
   );
 
   return (
-    <form onSubmit={(event) => handleLoginSubmit(event)}>
-      <Card className="w-full max-w-sm m-auto mt-5">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            
-            Entre com suas credenciais para acessar sua conta.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              ref={emailInputRef}
-              id="email"
-              type="email"
-              placeholder="seu@email.com.br"
-              required
-            />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md animate-in fade-in duration-500">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <Heart className="h-8 w-8 text-blue-600 mr-2" />
+            <h1 className="text-2xl font-bold text-blue-600">Projeto Mais Vida</h1>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              ref={passwordInputRef}
-              id="password"
-              type="password"
-              required
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="grid">
-          {formError && (
-            <div className="text-amber-600 mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                <p className="text-sm font-semibold">Erro no login</p>
+          <p className="text-gray-600">
+            Bem-vindo de volta! Faça login para continuar sua jornada.
+          </p>
+        </div>
+
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center">Login</CardTitle>
+            <CardDescription className="text-center">
+              Entre com suas credenciais para acessar sua conta
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleLoginSubmit}>
+            <CardContent className="space-y-4">
+              {formError && (
+                <div className="text-amber-600 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <p className="text-sm font-semibold">Erro no login</p>
+                  </div>
+                  <p className="text-sm mt-1">{formError}</p>
+                </div>
+              )}
+              {formSuccess && (
+                <div className="text-green-600 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    <p className="text-sm font-semibold">Login realizado com sucesso!</p>
+                  </div>
+                  <p className="text-sm mt-1">Redirecionando para o dashboard...</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
               </div>
-              <p className="text-sm mt-1">{formError}</p>
-            </div>
-          )}
-          {formSuccess && (
-            <div className="text-green-600 mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                <p className="text-sm font-semibold">Login realizado com sucesso!</p>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
               </div>
-              <p className="text-sm mt-1">Redirecionando para o dashboard...</p>
-            </div>
-          )}
-          <Button
-            className="w-full flex items-center gap-2"
-            disabled={formLoading}
-          >
-            {formLoading && (
-              <LoaderPinwheel className="w-[18px] animate-spin" />
-            )}
-            Entrar
-          </Button>
-          <div className="mt-5 underline text-center">
-            <Link href="/cadastro">Não tem conta? Cadastre-se</Link>
-          </div>
-        </CardFooter>
-      </Card>
-    </form>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white" 
+                disabled={formLoading}
+              >
+                {formLoading ? "Entrando..." : "Entrar"}
+              </Button>
+              <div className="text-center text-sm">
+                <span className="text-gray-600">Não tem uma conta? </span>
+                <Link 
+                  href="/cadastro" 
+                  className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  Cadastre-se
+                </Link>
+              </div>
+              <div className="text-center">
+                <Link 
+                  href="#" 
+                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Esqueceu sua senha?
+                </Link>
+              </div>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    </div>
   );
 }
