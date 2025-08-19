@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { prisma, cleanupPrisma } from "@/lib/prisma-vercel";
 import { cookies } from "next/headers";

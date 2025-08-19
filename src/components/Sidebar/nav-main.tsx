@@ -37,7 +37,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>Sidebar</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const hasChildren = !!(item.items && item.items.length > 0);

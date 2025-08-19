@@ -30,17 +30,18 @@ export default async function Home() {
     // Se chegou aqui, o usuário está autenticado
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-900 text-center mb-4">
-            Bem-vindo ao Mais Eventos!
+        <div className="max-w-2xl w-full bg-white rounded-lg shadow-md p-6">
+          <h1 className="text-3xl font-bold text-gray-900 text-center mb-6">
+            Bem-vindo ao Sistema de Autenticação! 🎉
           </h1>
-          <p className="text-gray-600 text-center mb-6">
-            Você está logado com sucesso.
+          <p className="text-gray-600 text-center mb-8">
+            Sistema de autenticação e autorização com controle de permissões.
           </p>
+          
           <div className="text-center">
             <a
               href="/dashboard"
-              className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Ir para o Dashboard
             </a>

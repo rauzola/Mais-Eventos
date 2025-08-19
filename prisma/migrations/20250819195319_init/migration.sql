@@ -1,18 +1,5 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Sessions` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
-
-*/
--- DropForeignKey
-ALTER TABLE "public"."Sessions" DROP CONSTRAINT "Sessions_userId_fkey";
-
--- DropTable
-DROP TABLE "public"."Sessions";
-
--- DropTable
-DROP TABLE "public"."User";
+-- CreateEnum
+CREATE TYPE "public"."Role" AS ENUM ('USER', 'STAFF', 'COORD', 'CONCELHO', 'ADMIN');
 
 -- CreateTable
 CREATE TABLE "public"."users" (
@@ -21,6 +8,7 @@ CREATE TABLE "public"."users" (
     "password" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "role" "public"."Role" NOT NULL DEFAULT 'USER',
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );

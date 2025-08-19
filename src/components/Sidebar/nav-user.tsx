@@ -4,11 +4,8 @@
 
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link"; // Importe o Link do Next.js
 
