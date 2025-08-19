@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma-pg";
 
 export async function GET() {
   try {
+    console.log("Testando conexão com banco...");
     const userCount = await prisma.user.count();
+    console.log("Conexão OK, total de usuários:", userCount);
     return NextResponse.json({ status: "Conexão OK", userCount });
   } catch (error) {
     console.error("Erro no teste de conexão:", error);
@@ -18,31 +20,59 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, cpf } = body;
+    
+    console.log("API check-fields recebeu:", { email, cpf });
 
-    // Queries otimizadas usando count em vez de findUnique
-    const [emailCount, cpfCount] = await Promise.all([
-      email && email.trim() 
-        ? prisma.user.count({ where: { email: email.trim() } })
-        : 0,
-      cpf && cpf.trim()
-        ? prisma.user.count({ where: { cpf: cpf.trim() } })
-        : 0
-    ]);
+    let emailExists = false;
+    let cpfExists = false;
 
-    return NextResponse.json({
-      emailExists: emailCount > 0,
-      cpfExists: cpfCount > 0,
+    // Verificar email se fornecido
+    if (email && email.trim() !== "") {
+      try {
+        const emailUser = await prisma.user.findFirst({
+          where: { email: email.trim() },
+          select: { id: true }
+        });
+        emailExists = !!emailUser;
+        console.log("Email verificado:", { email, emailExists });
+      } catch (error) {
+        console.error("Erro ao verificar email:", error);
+        emailExists = false;
+      }
+    }
+
+    // Verificar CPF se fornecido
+    if (cpf && cpf.trim() !== "") {
+      try {
+        const cpfUser = await prisma.user.findFirst({
+          where: { cpf: cpf.trim() },
+          select: { id: true }
+        });
+        cpfExists = !!cpfUser;
+        console.log("CPF verificado:", { cpf, cpfExists });
+      } catch (error) {
+        console.error("Erro ao verificar CPF:", error);
+        cpfExists = false;
+      }
+    }
+
+    const result = {
+      emailExists,
+      cpfExists,
       message: "Verificação concluída"
-    });
+    };
+
+    console.log("Resultado final:", result);
+    return NextResponse.json(result);
 
   } catch (error) {
     console.error("Erro na verificação de campos:", error);
-    return NextResponse.json(
-      { 
-        error: "Erro interno do servidor",
-        details: error instanceof Error ? error.message : "Erro desconhecido"
-      },
-      { status: 500 }
-    );
+    
+    // Em caso de erro, retornar false para não bloquear
+    return NextResponse.json({
+      emailExists: false,
+      cpfExists: false,
+      message: "Verificação não concluída - usando valores padrão"
+    });
   }
 }

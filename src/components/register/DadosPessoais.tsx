@@ -35,17 +35,21 @@ export const DadosPessoais = ({
     message: string;
   }>({ isValidating: false, isValid: null, message: "" });
 
-  // Função para verificar campos otimizada
+  // Função para verificar campos com debounce simples
   const checkFields = useCallback(async (email?: string, cpf?: string) => {
     try {
+      console.log("Verificando campos:", { email, cpf });
+      
       const response = await axios.post('/api/register/check-fields', {
         email: email || data.email,
         cpf: cpf || data.cpf
       }, {
-        timeout: 3000 // Reduzir para 3 segundos
+        timeout: 3000, // Reduzir para 3 segundos
+        signal: AbortSignal.timeout(3000) // Abort signal para cancelar
       });
 
       const { emailExists, cpfExists } = response.data;
+      console.log("Resposta da API:", { emailExists, cpfExists });
 
       // Atualizar validação do email
       if (email !== undefined) {
@@ -72,14 +76,14 @@ export const DadosPessoais = ({
         setEmailValidation({
           isValidating: false,
           isValid: null,
-          message: "Erro ao verificar email"
+          message: "Verificação indisponível"
         });
       }
       if (cpf !== undefined) {
         setCpfValidation({
           isValidating: false,
           isValid: null,
-          message: "Erro ao verificar CPF"
+          message: "Verificação indisponível"
         });
       }
     }
@@ -89,43 +93,38 @@ export const DadosPessoais = ({
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const cpfTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Verificar email quando mudar
+  // Verificar campos quando ambos estiverem preenchidos
   useEffect(() => {
-    if (data.email && data.email.includes('@')) {
+    const emailValid = data.email && data.email.includes('@');
+    const cpfValid = data.cpf && data.cpf.length >= 11;
+    
+    // Só dispara a requisição se ambos os campos estiverem preenchidos
+    if (emailValid && cpfValid) {
       setEmailValidation(prev => ({ ...prev, isValidating: true }));
+      setCpfValidation(prev => ({ ...prev, isValidating: true }));
       
-      // Limpar timeout anterior
+      // Limpar timeouts anteriores
       if (emailTimeoutRef.current) {
         clearTimeout(emailTimeoutRef.current);
       }
-      
-      // Novo timeout
-      emailTimeoutRef.current = setTimeout(() => {
-        checkFields(data.email, undefined);
-      }, 500);
-    } else {
-      setEmailValidation({ isValidating: false, isValid: null, message: "" });
-    }
-  }, [data.email, checkFields]);
-
-  // Verificar CPF quando mudar
-  useEffect(() => {
-    if (data.cpf && data.cpf.length >= 11) {
-      setCpfValidation(prev => ({ ...prev, isValidating: true }));
-      
-      // Limpar timeout anterior
       if (cpfTimeoutRef.current) {
         clearTimeout(cpfTimeoutRef.current);
       }
       
-      // Novo timeout
-      cpfTimeoutRef.current = setTimeout(() => {
-        checkFields(undefined, data.cpf);
-      }, 500);
+      // Novo timeout para verificar ambos os campos
+      emailTimeoutRef.current = setTimeout(() => {
+        checkFields(data.email, data.cpf);
+      }, 800);
     } else {
-      setCpfValidation({ isValidating: false, isValid: null, message: "" });
+      // Resetar validações se algum campo não estiver preenchido
+      if (!emailValid) {
+        setEmailValidation({ isValidating: false, isValid: null, message: "" });
+      }
+      if (!cpfValid) {
+        setCpfValidation({ isValidating: false, isValid: null, message: "" });
+      }
     }
-  }, [data.cpf, checkFields]);
+  }, [data.email, data.cpf, checkFields]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,7 +223,8 @@ export const DadosPessoais = ({
               required
               className={`pr-10 ${
                 emailValidation.isValid === false ? 'border-red-500' : 
-                emailValidation.isValid === true ? 'border-green-500' : ''
+                emailValidation.isValid === true ? 'border-green-500' : 
+                data.email && data.email.includes('@') ? 'border-blue-300' : ''
               }`}
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -237,6 +237,9 @@ export const DadosPessoais = ({
               {emailValidation.isValid === false && (
                 <XCircle className="h-4 w-4 text-red-500" />
               )}
+              {data.email && data.email.includes('@') && !emailValidation.isValidating && emailValidation.isValid === null && (
+                <div className="h-4 w-4 rounded-full border-2 border-blue-300"></div>
+              )}
             </div>
           </div>
           {emailValidation.message && (
@@ -244,6 +247,18 @@ export const DadosPessoais = ({
               emailValidation.isValid ? 'text-green-600' : 'text-red-600'
             }`}>
               {emailValidation.message}
+            </p>
+          )}
+          {data.email && data.email.includes('@') && !data.cpf && (
+            <p className="text-sm mt-1 text-blue-600">
+              Preencha o CPF para verificar disponibilidade
+            </p>
+          )}
+          {data.email && data.email.includes('@') && data.cpf && data.cpf.length >= 11 && 
+           !emailValidation.isValidating && emailValidation.isValid === null && 
+           !cpfValidation.isValidating && cpfValidation.isValid === null && (
+            <p className="text-sm mt-1 text-blue-600">
+              Verificando disponibilidade...
             </p>
           )}
         </div>
@@ -259,7 +274,8 @@ export const DadosPessoais = ({
               required
               className={`pr-10 ${
                 cpfValidation.isValid === false ? 'border-red-500' : 
-                cpfValidation.isValid === true ? 'border-green-500' : ''
+                cpfValidation.isValid === true ? 'border-green-500' : 
+                data.cpf && data.cpf.length >= 11 ? 'border-blue-300' : ''
               }`}
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -272,6 +288,9 @@ export const DadosPessoais = ({
               {cpfValidation.isValid === false && (
                 <XCircle className="h-4 w-4 text-red-500" />
               )}
+              {data.cpf && data.cpf.length >= 11 && !cpfValidation.isValidating && cpfValidation.isValid === null && (
+                <div className="h-4 w-4 rounded-full border-2 border-blue-300"></div>
+              )}
             </div>
           </div>
           {cpfValidation.message && (
@@ -279,6 +298,11 @@ export const DadosPessoais = ({
               cpfValidation.isValid ? 'text-green-600' : 'text-red-600'
             }`}>
               {cpfValidation.message}
+            </p>
+          )}
+          {data.cpf && data.cpf.length >= 11 && !data.email && (
+            <p className="text-sm mt-1 text-blue-600">
+              Preencha o email para verificar disponibilidade
             </p>
           )}
         </div>
