@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import { CadastroData } from "./index";
+import { useState, useEffect, useCallback, useRef } from "react";
+import axios from "axios";
 
 interface DadosPessoaisProps {
   data: CadastroData;
@@ -19,11 +21,127 @@ export const DadosPessoais = ({
   data, 
   updateData, 
   onNext, 
-  formError, 
   setFormError 
 }: DadosPessoaisProps) => {
+  const [emailValidation, setEmailValidation] = useState<{
+    isValidating: boolean;
+    isValid: boolean | null;
+    message: string;
+  }>({ isValidating: false, isValid: null, message: "" });
+
+  const [cpfValidation, setCpfValidation] = useState<{
+    isValidating: boolean;
+    isValid: boolean | null;
+    message: string;
+  }>({ isValidating: false, isValid: null, message: "" });
+
+  // Função para verificar campos com debounce simples
+  const checkFields = useCallback(async (email?: string, cpf?: string) => {
+    try {
+      console.log("Verificando campos:", { email, cpf });
+      
+      const response = await axios.post('/api/register/check-fields', {
+        email: email || data.email,
+        cpf: cpf || data.cpf
+      }, {
+        timeout: 5000 // 5 segundos de timeout
+      });
+
+      const { emailExists, cpfExists } = response.data;
+      console.log("Resposta da API:", { emailExists, cpfExists });
+
+      // Atualizar validação do email
+      if (email !== undefined) {
+        setEmailValidation({
+          isValidating: false,
+          isValid: !emailExists,
+          message: emailExists ? "Este email já está cadastrado" : "Email disponível"
+        });
+      }
+
+      // Atualizar validação do CPF
+      if (cpf !== undefined) {
+        setCpfValidation({
+          isValidating: false,
+          isValid: !cpfExists,
+          message: cpfExists ? "Este CPF já está cadastrado" : "CPF disponível"
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao verificar campos:", error);
+      
+      // Em caso de erro, marcar como válido para não bloquear o usuário
+      if (email !== undefined) {
+        setEmailValidation({
+          isValidating: false,
+          isValid: null,
+          message: "Erro ao verificar email"
+        });
+      }
+      if (cpf !== undefined) {
+        setCpfValidation({
+          isValidating: false,
+          isValid: null,
+          message: "Erro ao verificar CPF"
+        });
+      }
+    }
+  }, [data.email, data.cpf]);
+
+  // Debounce simples usando useRef
+  const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cpfTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Verificar email quando mudar
+  useEffect(() => {
+    if (data.email && data.email.includes('@')) {
+      setEmailValidation(prev => ({ ...prev, isValidating: true }));
+      
+      // Limpar timeout anterior
+      if (emailTimeoutRef.current) {
+        clearTimeout(emailTimeoutRef.current);
+      }
+      
+      // Novo timeout
+      emailTimeoutRef.current = setTimeout(() => {
+        checkFields(data.email, undefined);
+      }, 1000);
+    } else {
+      setEmailValidation({ isValidating: false, isValid: null, message: "" });
+    }
+  }, [data.email, checkFields]);
+
+  // Verificar CPF quando mudar
+  useEffect(() => {
+    if (data.cpf && data.cpf.length >= 11) {
+      setCpfValidation(prev => ({ ...prev, isValidating: true }));
+      
+      // Limpar timeout anterior
+      if (cpfTimeoutRef.current) {
+        clearTimeout(cpfTimeoutRef.current);
+      }
+      
+      // Novo timeout
+      cpfTimeoutRef.current = setTimeout(() => {
+        checkFields(undefined, data.cpf);
+      }, 1000);
+    } else {
+      setCpfValidation({ isValidating: false, isValid: null, message: "" });
+    }
+  }, [data.cpf, checkFields]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Verificar se há erros de validação
+    if (emailValidation.isValid === false) {
+      setFormError("Este email já está cadastrado.");
+      return;
+    }
+    if (cpfValidation.isValid === false) {
+      setFormError("Este CPF já está cadastrado.");
+      return;
+    }
     
     // Basic validation - todos os campos obrigatórios
     if (!data.nomeCompleto) {
@@ -99,25 +217,73 @@ export const DadosPessoais = ({
         
         <div>
           <Label htmlFor="email">E-mail *</Label>
-          <Input
-            id="email"
-            type="email"
-            value={data.email}
-            onChange={(e) => updateData({ email: e.target.value })}
-            placeholder="seu@email.com"
-            required
-          />
+          <div className="relative">
+            <Input
+              id="email"
+              type="email"
+              value={data.email}
+              onChange={(e) => updateData({ email: e.target.value })}
+              placeholder="seu@email.com"
+              required
+              className={`pr-10 ${
+                emailValidation.isValid === false ? 'border-red-500' : 
+                emailValidation.isValid === true ? 'border-green-500' : ''
+              }`}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {emailValidation.isValidating && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              )}
+              {emailValidation.isValid === true && (
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              )}
+              {emailValidation.isValid === false && (
+                <XCircle className="h-4 w-4 text-red-500" />
+              )}
+            </div>
+          </div>
+          {emailValidation.message && (
+            <p className={`text-sm mt-1 ${
+              emailValidation.isValid ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {emailValidation.message}
+            </p>
+          )}
         </div>
         
         <div>
           <Label htmlFor="cpf">CPF *</Label>
-          <Input
-            id="cpf"
-            value={data.cpf}
-            onChange={(e) => updateData({ cpf: e.target.value })}
-            placeholder="000.000.000-00"
-            required
-          />
+          <div className="relative">
+            <Input
+              id="cpf"
+              value={data.cpf}
+              onChange={(e) => updateData({ cpf: e.target.value })}
+              placeholder="000.000.000-00"
+              required
+              className={`pr-10 ${
+                cpfValidation.isValid === false ? 'border-red-500' : 
+                cpfValidation.isValid === true ? 'border-green-500' : ''
+              }`}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {cpfValidation.isValidating && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              )}
+              {cpfValidation.isValid === true && (
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              )}
+              {cpfValidation.isValid === false && (
+                <XCircle className="h-4 w-4 text-red-500" />
+              )}
+            </div>
+          </div>
+          {cpfValidation.message && (
+            <p className={`text-sm mt-1 ${
+              cpfValidation.isValid ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {cpfValidation.message}
+            </p>
+          )}
         </div>
         
         <div>

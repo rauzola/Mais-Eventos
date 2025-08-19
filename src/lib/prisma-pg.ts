@@ -4,30 +4,10 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
-function createPrismaClient() {
-  const client = new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.POSTGRES_URL,
-      },
-    },
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
-
-  // Configurações específicas para produção/Vercel
-  if (process.env.NODE_ENV === "production") {
-    // Desabilita prepared statements para evitar o erro
-    client.$connect();
-    
-    // Cleanup na desconexão
-    process.on("beforeExit", async () => {
-      await client.$disconnect();
-    });
-  }
-
-  return client;
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
 
 export function PrismaGetInstance(): PrismaClient {

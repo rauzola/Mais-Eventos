@@ -22,7 +22,6 @@ export const FichaSaude = ({
   updateData, 
   onPrevious, 
   onSubmit, 
-  formError, 
   setFormError,
   formLoading 
 }: FichaSaudeProps) => {
