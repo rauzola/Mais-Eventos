@@ -25,12 +25,55 @@ export const DadosPessoais = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!data.nomeCompleto || !data.email || !data.cpf || !data.senha || !data.confirmarSenha) {
-      setFormError("Por favor, preencha todos os campos obrigatórios.");
+    // Basic validation - todos os campos obrigatórios
+    if (!data.nomeCompleto) {
+      setFormError("Nome Completo é obrigatório.");
       return;
     }
-    
+    if (!data.email) {
+      setFormError("E-mail é obrigatório.");
+      return;
+    }
+    if (!data.cpf) {
+      setFormError("CPF é obrigatório.");
+      return;
+    }
+    if (!data.dataNascimento) {
+      setFormError("Data de Nascimento é obrigatória.");
+      return;
+    }
+    if (!data.estadoCivil) {
+      setFormError("Estado Civil é obrigatório.");
+      return;
+    }
+    if (!data.tamanhoCamiseta) {
+      setFormError("Tamanho da Camiseta é obrigatório.");
+      return;
+    }
+    if (!data.profissao) {
+      setFormError("Profissão é obrigatória.");
+      return;
+    }
+    if (!data.telefone) {
+      setFormError("Telefone é obrigatório.");
+      return;
+    }
+    if (!data.contatoEmergencia) {
+      setFormError("Contato de Emergência é obrigatório.");
+      return;
+    }
+    if (!data.telefoneEmergencia) {
+      setFormError("Telefone de Emergência é obrigatório.");
+      return;
+    }
+    if (!data.cidade) {
+      setFormError("Cidade é obrigatória.");
+      return;
+    }
+    if (!data.senha || data.senha.length < 6) {
+      setFormError("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
     if (data.senha !== data.confirmarSenha) {
       setFormError("As senhas digitadas não são iguais.");
       return;

@@ -101,10 +101,34 @@ export function RegisterForm() {
     try {
       setFormLoading(true);
       await axios.post<RegisterResponse>("/api/register", {
+        // Campos básicos
         email: formData.email,
         password: formData.senha,
         password2: formData.confirmarSenha,
-        // Os demais campos podem ser enviados em outro endpoint futuramente
+        
+        // Dados Pessoais
+        nomeCompleto: formData.nomeCompleto,
+        cpf: formData.cpf,
+        dataNascimento: formData.dataNascimento,
+        estadoCivil: formData.estadoCivil,
+        tamanhoCamiseta: formData.tamanhoCamiseta,
+        profissao: formData.profissao,
+        telefone: formData.telefone,
+        contatoEmergencia: formData.contatoEmergencia,
+        telefoneEmergencia: formData.telefoneEmergencia,
+        cidade: formData.cidade,
+        
+        // Ficha de Saúde
+        portadorDoenca: formData.portadorDoenca,
+        alergiaIntolerancia: formData.alergiaIntolerancia,
+        medicacaoUso: formData.medicacaoUso,
+        restricaoAlimentar: formData.restricaoAlimentar,
+        planoSaude: formData.planoSaude,
+        
+        // Termos e Condições
+        termo1: formData.termo1,
+        termo2: formData.termo2,
+        termo3: formData.termo3,
       });
 
       setFormLoading(false);

@@ -21,6 +21,23 @@ enum Role {
   ADMIN
 }
 
+enum EstadoCivil {
+  SOLTEIRO
+  CASADO
+  DIVORCIADO
+  VIUVO
+  UNIAO_ESTAVEL
+}
+
+enum TamanhoCamiseta {
+  PP
+  P
+  M
+  G
+  GG
+  XGG
+}
+
 model User {
   id        String             @id @default(cuid())
   email     String             @unique
@@ -28,6 +45,32 @@ model User {
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
   role      Role               @default(USER)
+  
+  // Dados Pessoais
+  nomeCompleto        String?
+  cpf                 String?           @unique
+  dataNascimento      DateTime?
+  estadoCivil         EstadoCivil?
+  tamanhoCamiseta     TamanhoCamiseta?
+  profissao           String?
+  telefone            String?
+  contatoEmergencia   String?
+  telefoneEmergencia  String?
+  cidade              String?
+  
+  // Ficha de Saúde
+  portadorDoenca      String?
+  alergiaIntolerancia String?
+  medicacaoUso        String?
+  restricaoAlimentar  String?
+  planoSaude          String?
+  
+  // Termos e Condições
+  termo1              Boolean           @default(false)
+  termo2              Boolean           @default(false)
+  termo3              Boolean           @default(false)
+  
+  // Relações
   Sessions  Sessions[]
   
   @@map("users")
