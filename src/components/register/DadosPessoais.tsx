@@ -35,20 +35,17 @@ export const DadosPessoais = ({
     message: string;
   }>({ isValidating: false, isValid: null, message: "" });
 
-  // Função para verificar campos com debounce simples
+  // Função para verificar campos otimizada
   const checkFields = useCallback(async (email?: string, cpf?: string) => {
     try {
-      console.log("Verificando campos:", { email, cpf });
-      
       const response = await axios.post('/api/register/check-fields', {
         email: email || data.email,
         cpf: cpf || data.cpf
       }, {
-        timeout: 5000 // 5 segundos de timeout
+        timeout: 3000 // Reduzir para 3 segundos
       });
 
       const { emailExists, cpfExists } = response.data;
-      console.log("Resposta da API:", { emailExists, cpfExists });
 
       // Atualizar validação do email
       if (email !== undefined) {
@@ -105,7 +102,7 @@ export const DadosPessoais = ({
       // Novo timeout
       emailTimeoutRef.current = setTimeout(() => {
         checkFields(data.email, undefined);
-      }, 1000);
+      }, 500);
     } else {
       setEmailValidation({ isValidating: false, isValid: null, message: "" });
     }
@@ -124,7 +121,7 @@ export const DadosPessoais = ({
       // Novo timeout
       cpfTimeoutRef.current = setTimeout(() => {
         checkFields(undefined, data.cpf);
-      }, 1000);
+      }, 500);
     } else {
       setCpfValidation({ isValidating: false, isValid: null, message: "" });
     }

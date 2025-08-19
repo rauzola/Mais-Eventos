@@ -126,21 +126,21 @@ export function RegisterForm() {
         termo1: formData.termo1,
         termo2: formData.termo2,
         termo3: formData.termo3,
-      });
+          });
 
-      setFormLoading(false);
-      setFormSuccess(true);
+          setFormLoading(false);
+          setFormSuccess(true);
       setTimeout(() => router.push("/login"), 1500);
-    } catch (error) {
-      if (error instanceof AxiosError) {
+        } catch (error) {
+          if (error instanceof AxiosError) {
         const { error: errorMessage } = error.response?.data as RegisterResponse;
-        setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
-      } else {
-        setFormError("Erro inesperado. Tente novamente.");
-      }
-      setFormLoading(false);
-      setFormSuccess(false);
-    }
+              setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
+          } else {
+            setFormError("Erro inesperado. Tente novamente.");
+          }
+          setFormLoading(false);
+          setFormSuccess(false);
+        }
   };
 
   const renderStepContent = () => {
@@ -204,8 +204,8 @@ export function RegisterForm() {
                 className={`h-full bg-blue-600 transition-all duration-300 ${
                   currentStep >= 2 ? 'w-full' : 'w-0'
                 }`}
-              />
-            </div>
+            />
+          </div>
             <div className="flex items-center space-x-2">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
                 currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
@@ -217,7 +217,7 @@ export function RegisterForm() {
               </span>
             </div>
           </div>
-        </div>
+          </div>
 
         {/* Form Content */}
         <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-in scale-in duration-500">
@@ -227,24 +227,24 @@ export function RegisterForm() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {formError && (
+          {formError && (
               <div className="text-amber-600 p-3 bg-amber-50 rounded-lg border border-amber-200 mb-4">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  <p className="text-sm font-semibold">Erro no formulário</p>
-                </div>
-                <p className="text-sm mt-1">{formError}</p>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <p className="text-sm font-semibold">Erro no formulário</p>
               </div>
-            )}
-            {formSuccess && (
+              <p className="text-sm mt-1">{formError}</p>
+            </div>
+          )}
+          {formSuccess && (
               <div className="text-green-600 p-3 bg-green-50 rounded-lg border border-green-200 mb-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  <p className="text-sm font-semibold">Cadastro realizado com sucesso!</p>
-                </div>
-                <p className="text-sm mt-1">Redirecionando para o login...</p>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                <p className="text-sm font-semibold">Cadastro realizado com sucesso!</p>
               </div>
-            )}
+                <p className="text-sm mt-1">Redirecionando para o login...</p>
+            </div>
+          )}
             {renderStepContent()}
           </CardContent>
         </Card>
@@ -260,6 +260,6 @@ export function RegisterForm() {
           </Link>
         </div>
       </div>
-    </div>
+          </div>
   );
 }
