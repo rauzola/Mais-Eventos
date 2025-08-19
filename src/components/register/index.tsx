@@ -12,179 +12,233 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import axios, { AxiosError } from "axios";
-import { LoaderPinwheel, CheckCircle, AlertCircle } from "lucide-react";
+import { Heart, ArrowLeft, Check, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useCallback, useRef, useState } from "react";
+import { useState } from "react";
+import { DadosPessoais } from "./DadosPessoais";
+import { FichaSaude } from "./FichaSaude";
+
+export interface CadastroData {
+  // Step 1 - Dados Pessoais
+  nomeCompleto: string;
+  email: string;
+  cpf: string;
+  dataNascimento: string;
+  estadoCivil: string;
+  tamanhoCamiseta: string;
+  profissao: string;
+  telefone: string;
+  contatoEmergencia: string;
+  telefoneEmergencia: string;
+  cidade: string;
+  senha: string;
+  confirmarSenha: string;
+  
+  // Step 2 - Ficha de Saúde
+  portadorDoenca: string;
+  alergiaIntolerancia: string;
+  medicacaoUso: string;
+  restricaoAlimentar: string;
+  planoSaude: string;
+  termo1: boolean;
+  termo2: boolean;
+  termo3: boolean;
+}
 
 export function RegisterForm() {
   const router = useRouter();
 
-  // Referência para os inputs
-  const emailInputRef = useRef<HTMLInputElement>(null);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
-  const password2InputRef = useRef<HTMLInputElement>(null);
-
   // Estados do formulário
+  const [currentStep, setCurrentStep] = useState(1);
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // Função que realiza o cadastro ao enviar o formulário
-  const handleRegisterSubmit = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      setFormError("");
+  // Dados do formulário
+  const [formData, setFormData] = useState<CadastroData>({
+    nomeCompleto: "",
+    email: "",
+    cpf: "",
+    dataNascimento: "",
+    estadoCivil: "",
+    tamanhoCamiseta: "",
+    profissao: "",
+    telefone: "",
+    contatoEmergencia: "",
+    telefoneEmergencia: "",
+    cidade: "",
+    senha: "",
+    confirmarSenha: "",
+    portadorDoenca: "",
+    alergiaIntolerancia: "",
+    medicacaoUso: "",
+    restricaoAlimentar: "",
+    planoSaude: "",
+    termo1: false,
+    termo2: false,
+    termo3: false,
+  });
+
+  const updateFormData = (data: Partial<CadastroData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  };
+
+  const handleNext = () => {
+    if (currentStep < 2) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
       setFormLoading(true);
+      await axios.post<RegisterResponse>("/api/register", {
+        email: formData.email,
+        password: formData.senha,
+        password2: formData.confirmarSenha,
+        // Os demais campos podem ser enviados em outro endpoint futuramente
+      });
 
-      if (
-        emailInputRef.current &&
-        passwordInputRef.current &&
-        password2InputRef.current
-      ) {
-        const email = emailInputRef.current.value;
-        const pass1 = passwordInputRef.current.value;
-        const pass2 = password2InputRef.current.value;
-
-        let shouldReturnError = false;
-
-        // Validações básicas
-        if (!email) {
-          setFormError("O email é obrigatório.");
-          shouldReturnError = true;
-        }
-
-        if (pass1.length < 6) {
-          setFormError("A senha deve ter pelo menos 6 caracteres.");
-          shouldReturnError = true;
-        }
-
-        if (pass1 !== pass2) {
-          setFormError("As senhas não coincidem.");
-          shouldReturnError = true;
-        }
-
-        if (shouldReturnError) {
-          setFormLoading(false);
-          setFormSuccess(false);
-          return;
-        }
-
-        try {
-          await axios.post<RegisterResponse>("/api/register", {
-            email,
-            password: pass1,
-            password2: pass2,
-          });
-
-          setFormLoading(false);
-          setFormSuccess(true);
-          
-          // Aguarda 2 segundos antes de redirecionar
-          setTimeout(() => {
-            router.push("/login");
-          }, 2000);
-          
-        } catch (error) {
-          if (error instanceof AxiosError) {
-            const { error: errorMessage } = error.response
-              ?.data as RegisterResponse;
-
-            if (errorMessage === "Este email já está cadastrado") {
-              setFormError("Este email já está cadastrado. Tente ir para o login.");
-            } else {
-              setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
-            }
-          } else {
-            setFormError("Erro inesperado. Tente novamente.");
-          }
-          setFormLoading(false);
-          setFormSuccess(false);
-        }
+      setFormLoading(false);
+      setFormSuccess(true);
+      setTimeout(() => router.push("/login"), 1500);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const { error: errorMessage } = error.response?.data as RegisterResponse;
+        setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
+      } else {
+        setFormError("Erro inesperado. Tente novamente.");
       }
-    },
-    [router]
-  );
+      setFormLoading(false);
+      setFormSuccess(false);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <DadosPessoais
+            data={formData}
+            updateData={updateFormData}
+            onNext={handleNext}
+            formError={formError}
+            setFormError={setFormError}
+          />
+        );
+      case 2:
+        return (
+          <FichaSaude
+            data={formData}
+            updateData={updateFormData}
+            onPrevious={handlePrevious}
+            onSubmit={handleSubmit}
+            formError={formError}
+            setFormError={setFormError}
+            formLoading={formLoading}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <form onSubmit={(event) => handleRegisterSubmit(event)}>
-      <Card className="w-full max-w-sm m-auto mt-5">
-        <CardHeader>
-          <CardTitle className="text-2xl">Cadastro</CardTitle>
-          <CardDescription>
-            Crie sua conta com email e senha.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              ref={emailInputRef}
-              id="email"
-              type="email"
-              placeholder="seu@email.com.br"
-              required
-            />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8 animate-in fade-in duration-500">
+          <div className="flex items-center justify-center mb-4">
+            <Heart className="h-8 w-8 text-blue-600 mr-2" />
+            <h1 className="text-2xl font-bold text-blue-600">Projeto Mais Vida</h1>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              ref={passwordInputRef}
-              id="password"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password2">Repita a senha</Label>
-            <Input
-              ref={password2InputRef}
-              id="password2"
-              type="password"
-              placeholder="Confirme sua senha"
-              required
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="grid">
-          {formError && (
-            <div className="text-amber-600 mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                <p className="text-sm font-semibold">Erro no formulário</p>
+          <p className="text-gray-600">
+            Junte-se a nós em uma jornada de saúde e bem-estar
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8 animate-in fade-in duration-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+              }`}>
+                {currentStep > 1 ? <Check className="h-4 w-4" /> : '1'}
               </div>
-              <p className="text-sm mt-1">{formError}</p>
+              <span className={currentStep >= 1 ? 'text-blue-600 font-medium' : 'text-gray-600'}>
+                Dados Pessoais
+              </span>
             </div>
-          )}
-          {formSuccess && (
-            <div className="text-green-600 mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                <p className="text-sm font-semibold">Cadastro realizado com sucesso!</p>
+            <div className="flex-1 h-0.5 bg-gray-300 mx-4">
+              <div 
+                className={`h-full bg-blue-600 transition-all duration-300 ${
+                  currentStep >= 2 ? 'w-full' : 'w-0'
+                }`}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+              }`}>
+                {currentStep > 2 ? <Check className="h-4 w-4" /> : '2'}
               </div>
-              <p className="text-sm mt-1">
-                Redirecionando para o login...
-              </p>
+              <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-600'}>
+                Ficha de Saúde
+              </span>
             </div>
-          )}
-          <Button
-            className="w-full flex items-center gap-2"
-            disabled={formLoading}
-          >
-            {formLoading && (
-              <LoaderPinwheel className="w-[18px] animate-spin" />
+          </div>
+        </div>
+
+        {/* Form Content */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-in scale-in duration-500">
+          <CardHeader>
+            <CardTitle className="text-center">
+              {currentStep === 1 ? 'Dados Pessoais' : 'Ficha de Saúde'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {formError && (
+              <div className="text-amber-600 p-3 bg-amber-50 rounded-lg border border-amber-200 mb-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <p className="text-sm font-semibold">Erro no formulário</p>
+                </div>
+                <p className="text-sm mt-1">{formError}</p>
+              </div>
             )}
-            Cadastrar
-          </Button>
-          <div className="mt-5 underline text-center">
-            <Link href="/login">Já tem conta? Faça login</Link>
-          </div>
-        </CardFooter>
-      </Card>
-    </form>
+            {formSuccess && (
+              <div className="text-green-600 p-3 bg-green-50 rounded-lg border border-green-200 mb-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <p className="text-sm font-semibold">Cadastro realizado com sucesso!</p>
+                </div>
+                <p className="text-sm mt-1">Redirecionando para o login...</p>
+              </div>
+            )}
+            {renderStepContent()}
+          </CardContent>
+        </Card>
+
+        {/* Back to Login */}
+        <div className="text-center mt-6">
+          <Link 
+            href="/login" 
+            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Voltar para o login
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
