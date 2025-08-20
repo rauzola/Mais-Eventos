@@ -8,6 +8,7 @@ import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import { CadastroData } from "./index";
 import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
+import { applyCpfMask, removeCpfMask, validateCpfNumbers, validateCpf } from "@/lib/cpf-mask";
 
 interface DadosPessoaisProps {
   data: CadastroData;
@@ -38,14 +39,17 @@ export const DadosPessoais = ({
   // Função para verificar campos com debounce simples
   const checkFields = useCallback(async (email?: string, cpf?: string) => {
     try {
-      console.log("Verificando campos:", { email, cpf });
+      const emailToSend = email || data.email;
+      const cpfToSend = cpf || data.cpf; // Enviar com máscara
+      
+      console.log("Verificando campos:", { email: emailToSend, cpf: cpfToSend });
       
       const response = await axios.post('/api/register/check-fields', {
-        email: email || data.email,
-        cpf: cpf || data.cpf
+        email: emailToSend,
+        cpf: cpfToSend
       }, {
-        timeout: 3000, // Reduzir para 3 segundos
-        signal: AbortSignal.timeout(3000) // Abort signal para cancelar
+        timeout: 5000, // Timeout de 5 segundos
+        signal: AbortSignal.timeout(5000) // Abort signal para cancelar
       });
 
       const { emailExists, cpfExists } = response.data;
@@ -96,7 +100,7 @@ export const DadosPessoais = ({
   // Verificar campos quando ambos estiverem preenchidos
   useEffect(() => {
     const emailValid = data.email && data.email.includes('@');
-    const cpfValid = data.cpf && data.cpf.length >= 11;
+    const cpfValid = data.cpf && data.cpf.length >= 14; // CPF com máscara tem 14 caracteres (000.000.000-00)
     
     // Só dispara a requisição se ambos os campos estiverem preenchidos
     if (emailValid && cpfValid) {
@@ -138,6 +142,13 @@ export const DadosPessoais = ({
       setFormError("Este CPF já está cadastrado.");
       return;
     }
+
+    // Validar formato do CPF
+    const cpfValidationResult = validateCpf(data.cpf);
+    if (!cpfValidationResult.isValid) {
+      setFormError(cpfValidationResult.error || "CPF inválido.");
+      return;
+    }
     
     // Basic validation - todos os campos obrigatórios
     if (!data.nomeCompleto) {
@@ -148,8 +159,8 @@ export const DadosPessoais = ({
       setFormError("E-mail é obrigatório.");
       return;
     }
-    if (!data.cpf) {
-      setFormError("CPF é obrigatório.");
+    if (!data.cpf || data.cpf.length !== 14) {
+      setFormError("CPF deve estar no formato 000.000.000-00.");
       return;
     }
     if (!data.dataNascimento) {
@@ -254,9 +265,9 @@ export const DadosPessoais = ({
               Preencha o CPF para verificar disponibilidade
             </p>
           )}
-          {data.email && data.email.includes('@') && data.cpf && data.cpf.length >= 11 && 
-           !emailValidation.isValidating && emailValidation.isValid === null && 
-           !cpfValidation.isValidating && cpfValidation.isValid === null && (
+                     {data.email && data.email.includes('@') && data.cpf && data.cpf.length >= 14 && 
+            !emailValidation.isValidating && emailValidation.isValid === null && 
+            !cpfValidation.isValidating && cpfValidation.isValid === null && (
             <p className="text-sm mt-1 text-blue-600">
               Verificando disponibilidade...
             </p>
@@ -269,14 +280,17 @@ export const DadosPessoais = ({
             <Input
               id="cpf"
               value={data.cpf}
-              onChange={(e) => updateData({ cpf: e.target.value })}
+              onChange={(e) => {
+                const maskedValue = applyCpfMask(e.target.value);
+                updateData({ cpf: maskedValue });
+              }}
               placeholder="000.000.000-00"
               required
-              className={`pr-10 ${
-                cpfValidation.isValid === false ? 'border-red-500' : 
-                cpfValidation.isValid === true ? 'border-green-500' : 
-                data.cpf && data.cpf.length >= 11 ? 'border-blue-300' : ''
-              }`}
+                             className={`pr-10 ${
+                 cpfValidation.isValid === false ? 'border-red-500' : 
+                 cpfValidation.isValid === true ? 'border-green-500' : 
+                 data.cpf && data.cpf.length >= 14 ? 'border-blue-300' : ''
+               }`}
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               {cpfValidation.isValidating && (
@@ -288,7 +302,7 @@ export const DadosPessoais = ({
               {cpfValidation.isValid === false && (
                 <XCircle className="h-4 w-4 text-red-500" />
               )}
-              {data.cpf && data.cpf.length >= 11 && !cpfValidation.isValidating && cpfValidation.isValid === null && (
+                             {data.cpf && data.cpf.length >= 14 && !cpfValidation.isValidating && cpfValidation.isValid === null && (
                 <div className="h-4 w-4 rounded-full border-2 border-blue-300"></div>
               )}
             </div>
@@ -300,7 +314,7 @@ export const DadosPessoais = ({
               {cpfValidation.message}
             </p>
           )}
-          {data.cpf && data.cpf.length >= 11 && !data.email && (
+                     {data.cpf && data.cpf.length >= 14 && !data.email && (
             <p className="text-sm mt-1 text-blue-600">
               Preencha o email para verificar disponibilidade
             </p>

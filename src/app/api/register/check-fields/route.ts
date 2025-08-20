@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     const { email, cpf } = body;
     
     console.log("API check-fields recebeu:", { email, cpf });
+    console.log("CPF recebido - tipo:", typeof cpf, "valor:", cpf, "length:", cpf?.length);
 
     let emailExists = false;
     let cpfExists = false;
@@ -44,17 +45,32 @@ export async function POST(request: Request) {
     // Verificar CPF se fornecido
     if (cpf && cpf.trim() !== "") {
       try {
+        console.log("Buscando CPF no banco:", cpf.trim());
+        
+        // Buscar CPF exato com máscara
         const cpfUser = await prisma.user.findFirst({
           where: { cpf: cpf.trim() },
-          select: { id: true }
+          select: { id: true, cpf: true, email: true }
         });
+        
         cpfExists = !!cpfUser;
-        console.log("CPF verificado:", { cpf, cpfExists });
+        console.log("CPF verificado:", { 
+          cpfBuscado: cpf.trim(), 
+          cpfExists, 
+          usuarioEncontrado: cpfUser ? { id: cpfUser.id, email: cpfUser.email, cpf: cpfUser.cpf } : null 
+        });
+        
+        if (!cpfExists) {
+          console.log("CPF não encontrado no banco");
+        }
+        
       } catch (error) {
         console.error("Erro ao verificar CPF:", error);
         cpfExists = false;
       }
     }
+
+
 
     const result = {
       emailExists,
