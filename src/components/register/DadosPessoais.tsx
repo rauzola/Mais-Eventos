@@ -8,7 +8,7 @@ import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import { CadastroData } from "./index";
 import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
-import { applyCpfMask, removeCpfMask, validateCpfNumbers, validateCpf } from "@/lib/cpf-mask";
+import { applyCpfMask, validateCpf } from "@/lib/cpf-mask";
 
 interface DadosPessoaisProps {
   data: CadastroData;
