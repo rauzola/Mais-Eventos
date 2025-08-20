@@ -126,15 +126,21 @@ export function RegisterForm() {
         termo1: formData.termo1,
         termo2: formData.termo2,
         termo3: formData.termo3,
-          });
+      }, {
+        timeout: 10000, // 10 segundos de timeout
+      });
 
           setFormLoading(false);
           setFormSuccess(true);
       setTimeout(() => router.push("/login"), 1500);
         } catch (error) {
+          console.error("Erro no cadastro:", error);
+          
           if (error instanceof AxiosError) {
-        const { error: errorMessage } = error.response?.data as RegisterResponse;
-              setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
+            const { error: errorMessage } = error.response?.data as RegisterResponse;
+            setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
+          } else if (error instanceof Error) {
+            setFormError(error.message || "Erro inesperado. Tente novamente.");
           } else {
             setFormError("Erro inesperado. Tente novamente.");
           }

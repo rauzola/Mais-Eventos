@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { PrismaGetInstance } from "@/lib/prisma-pg";
+import { prisma } from "@/lib/prisma-vercel";
 import { Role, EstadoCivil, TamanhoCamiseta } from "@prisma/client";
 
 interface RegisterProps {
@@ -121,45 +121,48 @@ export async function POST(request: Request) {
     const hash = bcrypt.hashSync(password, 12);
     console.log("✅ Hash da senha gerado");
 
-    console.log("🔌 Conectando ao banco de dados...");
-    const prisma = PrismaGetInstance();
-
-    // Testa a conexão
-    try {
-      await prisma.$connect();
-      console.log("✅ Conexão com banco estabelecida");
-    } catch (dbError) {
-      console.error("❌ Erro na conexão com banco:", dbError);
-      return NextResponse.json(
-        { error: "Erro na conexão com banco de dados" },
-        { status: 500 }
-      );
-    }
+    console.log("🔌 Usando instância compartilhada do Prisma...");
 
     // Verifica se o usuário já existe (email)
-    const existingUserByEmail = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
-    });
+    try {
+      const existingUserByEmail = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() }
+      });
 
-    if (existingUserByEmail) {
-      console.log("❌ Usuário já existe (email)");
+      if (existingUserByEmail) {
+        console.log("❌ Usuário já existe (email)");
+        return NextResponse.json(
+          { error: "Este email já está cadastrado" },
+          { status: 400 }
+        );
+      }
+    } catch (dbError) {
+      console.error("❌ Erro ao verificar email existente:", dbError);
       return NextResponse.json(
-        { error: "Este email já está cadastrado" },
-        { status: 400 }
+        { error: "Erro de conexão com banco de dados" },
+        { status: 500 }
       );
     }
 
     // Verifica se o CPF já existe (se fornecido)
     if (cpf) {
-      const existingUserByCpf = await prisma.user.findUnique({
-        where: { cpf: cpf }
-      });
+      try {
+        const existingUserByCpf = await prisma.user.findUnique({
+          where: { cpf: cpf }
+        });
 
-      if (existingUserByCpf) {
-        console.log("❌ CPF já cadastrado");
+        if (existingUserByCpf) {
+          console.log("❌ CPF já cadastrado");
+          return NextResponse.json(
+            { error: "Este CPF já está cadastrado" },
+            { status: 400 }
+          );
+        }
+      } catch (dbError) {
+        console.error("❌ Erro ao verificar CPF existente:", dbError);
         return NextResponse.json(
-          { error: "Este CPF já está cadastrado" },
-          { status: 400 }
+          { error: "Erro de conexão com banco de dados" },
+          { status: 500 }
         );
       }
     }
@@ -212,11 +215,37 @@ export async function POST(request: Request) {
       cpf: cpf ? "***" : null
     });
 
-    const user = await prisma.user.create({
-      data: userData,
-    });
-
-    console.log("✅ Usuário criado com sucesso:", user.id);
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: userData,
+      });
+      console.log("✅ Usuário criado com sucesso:", user.id);
+    } catch (createError) {
+      console.error("❌ Erro ao criar usuário:", createError);
+      
+      if (createError instanceof Error) {
+        if (createError.message.includes('Unique constraint')) {
+          if (createError.message.includes('email')) {
+            return NextResponse.json(
+              { error: "Este email já está cadastrado" },
+              { status: 400 }
+            );
+          }
+          if (createError.message.includes('cpf')) {
+            return NextResponse.json(
+              { error: "Este CPF já está cadastrado" },
+              { status: 400 }
+            );
+          }
+        }
+      }
+      
+      return NextResponse.json(
+        { error: "Erro ao criar usuário. Tente novamente." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
@@ -238,10 +267,34 @@ export async function POST(request: Request) {
     if (error instanceof Error) {
       console.error("Mensagem:", error.message);
       console.error("Stack:", error.stack);
+      
+      // Verificar se é um erro específico do Prisma
+      if (error.message.includes('Unique constraint')) {
+        if (error.message.includes('email')) {
+          return NextResponse.json(
+            { error: "Este email já está cadastrado" },
+            { status: 400 }
+          );
+        }
+        if (error.message.includes('cpf')) {
+          return NextResponse.json(
+            { error: "Este CPF já está cadastrado" },
+            { status: 400 }
+          );
+        }
+      }
+      
+      // Verificar se é um erro de conexão
+      if (error.message.includes('connect') || error.message.includes('timeout')) {
+        return NextResponse.json(
+          { error: "Erro de conexão com o banco de dados. Tente novamente." },
+          { status: 500 }
+        );
+      }
     }
     
     return NextResponse.json(
-      { error: "Erro interno do servidor. Verifique os logs." },
+      { error: "Erro interno do servidor. Tente novamente." },
       { status: 500 }
     );
   }
