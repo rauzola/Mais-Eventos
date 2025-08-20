@@ -22,55 +22,58 @@ export async function POST(request: Request) {
     const { email, cpf } = body;
     
     console.log("API check-fields recebeu:", { email, cpf });
-    console.log("CPF recebido - tipo:", typeof cpf, "valor:", cpf, "length:", cpf?.length);
 
     let emailExists = false;
     let cpfExists = false;
 
+    // Verificar email e CPF em paralelo para ser mais rápido
+    const promises = [];
+
     // Verificar email se fornecido
     if (email && email.trim() !== "") {
-      try {
-        const emailUser = await prisma.user.findFirst({
+      promises.push(
+        prisma.user.findFirst({
           where: { email: email.trim() },
           select: { id: true }
-        });
-        emailExists = !!emailUser;
-        console.log("Email verificado:", { email, emailExists });
-      } catch (error) {
-        console.error("Erro ao verificar email:", error);
-        emailExists = false;
-      }
+        }).then(user => {
+          emailExists = !!user;
+          console.log("Email verificado:", { email, emailExists });
+        }).catch(error => {
+          console.error("Erro ao verificar email:", error);
+          emailExists = false;
+        })
+      );
     }
 
     // Verificar CPF se fornecido
     if (cpf && cpf.trim() !== "") {
-      try {
-        console.log("Buscando CPF no banco:", cpf.trim());
-        
-        // Buscar CPF exato com máscara
-        const cpfUser = await prisma.user.findFirst({
+      promises.push(
+        prisma.user.findFirst({
           where: { cpf: cpf.trim() },
           select: { id: true, cpf: true, email: true }
-        });
-        
-        cpfExists = !!cpfUser;
-        console.log("CPF verificado:", { 
-          cpfBuscado: cpf.trim(), 
-          cpfExists, 
-          usuarioEncontrado: cpfUser ? { id: cpfUser.id, email: cpfUser.email, cpf: cpfUser.cpf } : null 
-        });
-        
-        if (!cpfExists) {
-          console.log("CPF não encontrado no banco");
-        }
-        
-      } catch (error) {
-        console.error("Erro ao verificar CPF:", error);
-        cpfExists = false;
-      }
+        }).then(user => {
+          cpfExists = !!user;
+          console.log("CPF verificado:", { 
+            cpfBuscado: cpf.trim(), 
+            cpfExists, 
+            usuarioEncontrado: user ? { id: user.id, email: user.email, cpf: user.cpf } : null 
+          });
+        }).catch(error => {
+          console.error("Erro ao verificar CPF:", error);
+          cpfExists = false;
+        })
+      );
     }
 
-
+    // Aguardar todas as verificações com timeout
+    if (promises.length > 0) {
+      await Promise.race([
+        Promise.all(promises),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 3000)
+        )
+      ]);
+    }
 
     const result = {
       emailExists,
@@ -84,7 +87,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Erro na verificação de campos:", error);
     
-    // Em caso de erro, retornar false para não bloquear
+    // Em caso de erro ou timeout, retornar false para não bloquear
     return NextResponse.json({
       emailExists: false,
       cpfExists: false,

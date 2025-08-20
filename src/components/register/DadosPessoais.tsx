@@ -48,8 +48,7 @@ export const DadosPessoais = ({
         email: emailToSend,
         cpf: cpfToSend
       }, {
-        timeout: 5000, // Timeout de 5 segundos
-        signal: AbortSignal.timeout(5000) // Abort signal para cancelar
+        timeout: 4000, // Timeout reduzido para 4 segundos
       });
 
       const { emailExists, cpfExists } = response.data;
@@ -72,23 +71,47 @@ export const DadosPessoais = ({
           message: cpfExists ? "Este CPF já está cadastrado" : "CPF disponível"
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao verificar campos:", error);
       
-      // Em caso de erro, marcar como válido para não bloquear o usuário
-      if (email !== undefined) {
-        setEmailValidation({
-          isValidating: false,
-          isValid: null,
-          message: "Verificação indisponível"
-        });
-      }
-      if (cpf !== undefined) {
-        setCpfValidation({
-          isValidating: false,
-          isValid: null,
-          message: "Verificação indisponível"
-        });
+      // Verificar se foi cancelado ou timeout
+      const errorObj = error as { code?: string; message?: string };
+      const isCanceled = errorObj.code === 'ERR_CANCELED' || errorObj.message?.includes('canceled');
+      const isTimeout = errorObj.code === 'ECONNABORTED' || errorObj.message?.includes('timeout');
+      
+      if (isCanceled || isTimeout) {
+        console.log("Verificação cancelada ou timeout - permitindo continuar");
+        // Em caso de cancelamento ou timeout, permitir continuar sem bloquear
+        if (email !== undefined) {
+          setEmailValidation({
+            isValidating: false,
+            isValid: null,
+            message: "Verificação indisponível"
+          });
+        }
+        if (cpf !== undefined) {
+          setCpfValidation({
+            isValidating: false,
+            isValid: null,
+            message: "Verificação indisponível"
+          });
+        }
+      } else {
+        // Outros erros - marcar como válido para não bloquear
+        if (email !== undefined) {
+          setEmailValidation({
+            isValidating: false,
+            isValid: null,
+            message: "Verificação indisponível"
+          });
+        }
+        if (cpf !== undefined) {
+          setCpfValidation({
+            isValidating: false,
+            isValid: null,
+            message: "Verificação indisponível"
+          });
+        }
       }
     }
   }, [data.email, data.cpf]);
@@ -115,10 +138,10 @@ export const DadosPessoais = ({
         clearTimeout(cpfTimeoutRef.current);
       }
       
-      // Novo timeout para verificar ambos os campos
-      emailTimeoutRef.current = setTimeout(() => {
-        checkFields(data.email, data.cpf);
-      }, 800);
+             // Novo timeout para verificar ambos os campos
+       emailTimeoutRef.current = setTimeout(() => {
+         checkFields(data.email, data.cpf);
+       }, 500);
     } else {
       // Resetar validações se algum campo não estiver preenchido
       if (!emailValid) {
