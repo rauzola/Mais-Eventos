@@ -1,13 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 
-const createPrismaClient = () => {
+// Configuração específica para Vercel
+const prismaClientSingleton = () => {
   return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL,
       },
     },
+    log: ["error"],
   });
 };
 
@@ -15,30 +16,22 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-// Cleanup function for Vercel
+// Função para limpar conexões
 export async function cleanupPrisma() {
-  if (process.env.NODE_ENV === "production") {
+  try {
     await prisma.$disconnect();
+  } catch (error) {
+    console.error("Erro ao desconectar Prisma:", error);
   }
 }
 
-// Handle process termination
-process.on("beforeExit", async () => {
-  await cleanupPrisma();
-});
-
-process.on("SIGINT", async () => {
-  await cleanupPrisma();
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  await cleanupPrisma();
-  process.exit(0);
-});
+// Cleanup automático para Vercel
+if (process.env.NODE_ENV === "production") {
+  process.on("beforeExit", cleanupPrisma);
+  process.on("SIGINT", cleanupPrisma);
+  process.on("SIGTERM", cleanupPrisma);
+}

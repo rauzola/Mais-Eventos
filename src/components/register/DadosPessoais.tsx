@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { CadastroData } from "./index";
-import { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
-import { applyCpfMask, validateCpf } from "@/lib/cpf-mask";
+import { applyCpfMask, applyPhoneMask, applyDateMask, convertDateToHtmlFormat } from "@/lib/masks";
 
 interface DadosPessoaisProps {
   data: CadastroData;
@@ -22,156 +20,11 @@ export const DadosPessoais = ({
   data, 
   updateData, 
   onNext, 
+  formError, 
   setFormError 
 }: DadosPessoaisProps) => {
-  const [emailValidation, setEmailValidation] = useState<{
-    isValidating: boolean;
-    isValid: boolean | null;
-    message: string;
-  }>({ isValidating: false, isValid: null, message: "" });
-
-  const [cpfValidation, setCpfValidation] = useState<{
-    isValidating: boolean;
-    isValid: boolean | null;
-    message: string;
-  }>({ isValidating: false, isValid: null, message: "" });
-
-  // Função para verificar campos com debounce simples
-  const checkFields = useCallback(async (email?: string, cpf?: string) => {
-    try {
-      const emailToSend = email || data.email;
-      const cpfToSend = cpf || data.cpf; // Enviar com máscara
-      
-      console.log("Verificando campos:", { email: emailToSend, cpf: cpfToSend });
-      
-      const response = await axios.post('/api/register/check-fields', {
-        email: emailToSend,
-        cpf: cpfToSend
-      }, {
-        timeout: 4000, // Timeout reduzido para 4 segundos
-      });
-
-      const { emailExists, cpfExists } = response.data;
-      console.log("Resposta da API:", { emailExists, cpfExists });
-
-      // Atualizar validação do email
-      if (email !== undefined) {
-        setEmailValidation({
-          isValidating: false,
-          isValid: !emailExists,
-          message: emailExists ? "Este email já está cadastrado" : "Email disponível"
-        });
-      }
-
-      // Atualizar validação do CPF
-      if (cpf !== undefined) {
-        setCpfValidation({
-          isValidating: false,
-          isValid: !cpfExists,
-          message: cpfExists ? "Este CPF já está cadastrado" : "CPF disponível"
-        });
-      }
-    } catch (error: unknown) {
-      console.error("Erro ao verificar campos:", error);
-      
-      // Verificar se foi cancelado ou timeout
-      const errorObj = error as { code?: string; message?: string };
-      const isCanceled = errorObj.code === 'ERR_CANCELED' || errorObj.message?.includes('canceled');
-      const isTimeout = errorObj.code === 'ECONNABORTED' || errorObj.message?.includes('timeout');
-      
-      if (isCanceled || isTimeout) {
-        console.log("Verificação cancelada ou timeout - permitindo continuar");
-        // Em caso de cancelamento ou timeout, permitir continuar sem bloquear
-        if (email !== undefined) {
-          setEmailValidation({
-            isValidating: false,
-            isValid: null,
-            message: "Verificação indisponível"
-          });
-        }
-        if (cpf !== undefined) {
-          setCpfValidation({
-            isValidating: false,
-            isValid: null,
-            message: "Verificação indisponível"
-          });
-        }
-      } else {
-        // Outros erros - marcar como válido para não bloquear
-        if (email !== undefined) {
-          setEmailValidation({
-            isValidating: false,
-            isValid: null,
-            message: "Verificação indisponível"
-          });
-        }
-        if (cpf !== undefined) {
-          setCpfValidation({
-            isValidating: false,
-            isValid: null,
-            message: "Verificação indisponível"
-          });
-        }
-      }
-    }
-  }, [data.email, data.cpf]);
-
-  // Debounce simples usando useRef
-  const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const cpfTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Verificar campos quando ambos estiverem preenchidos
-  useEffect(() => {
-    const emailValid = data.email && data.email.includes('@');
-    const cpfValid = data.cpf && data.cpf.length >= 14; // CPF com máscara tem 14 caracteres (000.000.000-00)
-    
-    // Só dispara a requisição se ambos os campos estiverem preenchidos
-    if (emailValid && cpfValid) {
-      setEmailValidation(prev => ({ ...prev, isValidating: true }));
-      setCpfValidation(prev => ({ ...prev, isValidating: true }));
-      
-      // Limpar timeouts anteriores
-      if (emailTimeoutRef.current) {
-        clearTimeout(emailTimeoutRef.current);
-      }
-      if (cpfTimeoutRef.current) {
-        clearTimeout(cpfTimeoutRef.current);
-      }
-      
-             // Novo timeout para verificar ambos os campos
-       emailTimeoutRef.current = setTimeout(() => {
-         checkFields(data.email, data.cpf);
-       }, 500);
-    } else {
-      // Resetar validações se algum campo não estiver preenchido
-      if (!emailValid) {
-        setEmailValidation({ isValidating: false, isValid: null, message: "" });
-      }
-      if (!cpfValid) {
-        setCpfValidation({ isValidating: false, isValid: null, message: "" });
-      }
-    }
-  }, [data.email, data.cpf, checkFields]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Verificar se há erros de validação
-    if (emailValidation.isValid === false) {
-      setFormError("Este email já está cadastrado.");
-      return;
-    }
-    if (cpfValidation.isValid === false) {
-      setFormError("Este CPF já está cadastrado.");
-      return;
-    }
-
-    // Validar formato do CPF
-    const cpfValidationResult = validateCpf(data.cpf);
-    if (!cpfValidationResult.isValid) {
-      setFormError(cpfValidationResult.error || "CPF inválido.");
-      return;
-    }
     
     // Basic validation - todos os campos obrigatórios
     if (!data.nomeCompleto) {
@@ -182,8 +35,8 @@ export const DadosPessoais = ({
       setFormError("E-mail é obrigatório.");
       return;
     }
-    if (!data.cpf || data.cpf.length !== 14) {
-      setFormError("CPF deve estar no formato 000.000.000-00.");
+    if (!data.cpf) {
+      setFormError("CPF é obrigatório.");
       return;
     }
     if (!data.dataNascimento) {
@@ -231,6 +84,37 @@ export const DadosPessoais = ({
     onNext();
   };
 
+  // Funções para aplicar máscaras
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = applyCpfMask(e.target.value);
+    updateData({ cpf: maskedValue });
+  };
+
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = applyPhoneMask(e.target.value);
+    updateData({ telefone: maskedValue });
+  };
+
+  const handleTelefoneEmergenciaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = applyPhoneMask(e.target.value);
+    updateData({ telefoneEmergencia: maskedValue });
+  };
+
+  const handleDataNascimentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = applyDateMask(e.target.value);
+    updateData({ dataNascimento: maskedValue });
+  };
+
+  // Converter data para formato HTML quando necessário
+  const getHtmlDateValue = () => {
+    if (!data.dataNascimento) return '';
+    // Se já está no formato dd/mm/aaaa, converter para aaaa-mm-dd
+    if (data.dataNascimento.includes('/')) {
+      return convertDateToHtmlFormat(data.dataNascimento);
+    }
+    return data.dataNascimento;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -247,110 +131,37 @@ export const DadosPessoais = ({
         
         <div>
           <Label htmlFor="email">E-mail *</Label>
-          <div className="relative">
-            <Input
-              id="email"
-              type="email"
-              value={data.email}
-              onChange={(e) => updateData({ email: e.target.value })}
-              placeholder="seu@email.com"
-              required
-              className={`pr-10 ${
-                emailValidation.isValid === false ? 'border-red-500' : 
-                emailValidation.isValid === true ? 'border-green-500' : 
-                data.email && data.email.includes('@') ? 'border-blue-300' : ''
-              }`}
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {emailValidation.isValidating && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              )}
-              {emailValidation.isValid === true && (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              )}
-              {emailValidation.isValid === false && (
-                <XCircle className="h-4 w-4 text-red-500" />
-              )}
-              {data.email && data.email.includes('@') && !emailValidation.isValidating && emailValidation.isValid === null && (
-                <div className="h-4 w-4 rounded-full border-2 border-blue-300"></div>
-              )}
-            </div>
-          </div>
-          {emailValidation.message && (
-            <p className={`text-sm mt-1 ${
-              emailValidation.isValid ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {emailValidation.message}
-            </p>
-          )}
-          {data.email && data.email.includes('@') && !data.cpf && (
-            <p className="text-sm mt-1 text-blue-600">
-              Preencha o CPF para verificar disponibilidade
-            </p>
-          )}
-                     {data.email && data.email.includes('@') && data.cpf && data.cpf.length >= 14 && 
-            !emailValidation.isValidating && emailValidation.isValid === null && 
-            !cpfValidation.isValidating && cpfValidation.isValid === null && (
-            <p className="text-sm mt-1 text-blue-600">
-              Verificando disponibilidade...
-            </p>
-          )}
+          <Input
+            id="email"
+            type="email"
+            value={data.email}
+            onChange={(e) => updateData({ email: e.target.value })}
+            placeholder="seu@email.com"
+            required
+          />
         </div>
         
         <div>
           <Label htmlFor="cpf">CPF *</Label>
-          <div className="relative">
-            <Input
-              id="cpf"
-              value={data.cpf}
-              onChange={(e) => {
-                const maskedValue = applyCpfMask(e.target.value);
-                updateData({ cpf: maskedValue });
-              }}
-              placeholder="000.000.000-00"
-              required
-                             className={`pr-10 ${
-                 cpfValidation.isValid === false ? 'border-red-500' : 
-                 cpfValidation.isValid === true ? 'border-green-500' : 
-                 data.cpf && data.cpf.length >= 14 ? 'border-blue-300' : ''
-               }`}
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {cpfValidation.isValidating && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              )}
-              {cpfValidation.isValid === true && (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              )}
-              {cpfValidation.isValid === false && (
-                <XCircle className="h-4 w-4 text-red-500" />
-              )}
-                             {data.cpf && data.cpf.length >= 14 && !cpfValidation.isValidating && cpfValidation.isValid === null && (
-                <div className="h-4 w-4 rounded-full border-2 border-blue-300"></div>
-              )}
-            </div>
-          </div>
-          {cpfValidation.message && (
-            <p className={`text-sm mt-1 ${
-              cpfValidation.isValid ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {cpfValidation.message}
-            </p>
-          )}
-                     {data.cpf && data.cpf.length >= 14 && !data.email && (
-            <p className="text-sm mt-1 text-blue-600">
-              Preencha o email para verificar disponibilidade
-            </p>
-          )}
+          <Input
+            id="cpf"
+            value={data.cpf}
+            onChange={handleCpfChange}
+            placeholder="000.000.000-00"
+            maxLength={14}
+            required
+          />
         </div>
         
         <div>
           <Label htmlFor="dataNascimento">Data de Nascimento *</Label>
           <Input
             id="dataNascimento"
-            type="date"
+            type="text"
             value={data.dataNascimento}
-            onChange={(e) => updateData({ dataNascimento: e.target.value })}
+            onChange={handleDataNascimentoChange}
+            placeholder="dd/mm/aaaa"
+            maxLength={10}
             required
           />
         </div>
@@ -404,8 +215,9 @@ export const DadosPessoais = ({
           <Input
             id="telefone"
             value={data.telefone}
-            onChange={(e) => updateData({ telefone: e.target.value })}
+            onChange={handleTelefoneChange}
             placeholder="(00) 00000-0000"
+            maxLength={15}
             required
           />
         </div>
@@ -426,8 +238,9 @@ export const DadosPessoais = ({
           <Input
             id="telefoneEmergencia"
             value={data.telefoneEmergencia}
-            onChange={(e) => updateData({ telefoneEmergencia: e.target.value })}
+            onChange={handleTelefoneEmergenciaChange}
             placeholder="(00) 00000-0000"
+            maxLength={15}
             required
           />
         </div>

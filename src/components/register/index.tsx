@@ -3,9 +3,12 @@
 "use client";
 
 import { RegisterResponse } from "@/app/api/register/route";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -16,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DadosPessoais } from "./DadosPessoais";
 import { FichaSaude } from "./FichaSaude";
+import { convertDateToHtmlFormat } from "@/lib/masks";
 
 export interface CadastroData {
   // Step 1 - Dados Pessoais
@@ -97,6 +101,13 @@ export function RegisterForm() {
   const handleSubmit = async () => {
     try {
       setFormLoading(true);
+      
+      // Converter data de nascimento do formato dd/mm/aaaa para aaaa-mm-dd
+      let dataNascimentoFormatada = formData.dataNascimento;
+      if (formData.dataNascimento.includes('/')) {
+        dataNascimentoFormatada = convertDateToHtmlFormat(formData.dataNascimento);
+      }
+      
       await axios.post<RegisterResponse>("/api/register", {
         // Campos básicos
         email: formData.email,
@@ -106,7 +117,7 @@ export function RegisterForm() {
         // Dados Pessoais
         nomeCompleto: formData.nomeCompleto,
         cpf: formData.cpf,
-        dataNascimento: formData.dataNascimento,
+        dataNascimento: dataNascimentoFormatada,
         estadoCivil: formData.estadoCivil,
         tamanhoCamiseta: formData.tamanhoCamiseta,
         profissao: formData.profissao,
@@ -126,27 +137,21 @@ export function RegisterForm() {
         termo1: formData.termo1,
         termo2: formData.termo2,
         termo3: formData.termo3,
-      }, {
-        timeout: 10000, // 10 segundos de timeout
       });
 
-          setFormLoading(false);
-          setFormSuccess(true);
+      setFormLoading(false);
+      setFormSuccess(true);
       setTimeout(() => router.push("/login"), 1500);
-        } catch (error) {
-          console.error("Erro no cadastro:", error);
-          
-          if (error instanceof AxiosError) {
-            const { error: errorMessage } = error.response?.data as RegisterResponse;
-            setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
-          } else if (error instanceof Error) {
-            setFormError(error.message || "Erro inesperado. Tente novamente.");
-          } else {
-            setFormError("Erro inesperado. Tente novamente.");
-          }
-          setFormLoading(false);
-          setFormSuccess(false);
-        }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const { error: errorMessage } = error.response?.data as RegisterResponse;
+        setFormError(errorMessage || "Erro interno do servidor. Tente novamente.");
+      } else {
+        setFormError("Erro inesperado. Tente novamente.");
+      }
+      setFormLoading(false);
+      setFormSuccess(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -210,8 +215,8 @@ export function RegisterForm() {
                 className={`h-full bg-blue-600 transition-all duration-300 ${
                   currentStep >= 2 ? 'w-full' : 'w-0'
                 }`}
-            />
-          </div>
+              />
+            </div>
             <div className="flex items-center space-x-2">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
                 currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
@@ -223,7 +228,7 @@ export function RegisterForm() {
               </span>
             </div>
           </div>
-          </div>
+        </div>
 
         {/* Form Content */}
         <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-in scale-in duration-500">
@@ -233,24 +238,24 @@ export function RegisterForm() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-          {formError && (
+            {formError && (
               <div className="text-amber-600 p-3 bg-amber-50 rounded-lg border border-amber-200 mb-4">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                <p className="text-sm font-semibold">Erro no formulário</p>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <p className="text-sm font-semibold">Erro no formulário</p>
+                </div>
+                <p className="text-sm mt-1">{formError}</p>
               </div>
-              <p className="text-sm mt-1">{formError}</p>
-            </div>
-          )}
-          {formSuccess && (
+            )}
+            {formSuccess && (
               <div className="text-green-600 p-3 bg-green-50 rounded-lg border border-green-200 mb-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                <p className="text-sm font-semibold">Cadastro realizado com sucesso!</p>
-              </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <p className="text-sm font-semibold">Cadastro realizado com sucesso!</p>
+                </div>
                 <p className="text-sm mt-1">Redirecionando para o login...</p>
-            </div>
-          )}
+              </div>
+            )}
             {renderStepContent()}
           </CardContent>
         </Card>
@@ -266,6 +271,6 @@ export function RegisterForm() {
           </Link>
         </div>
       </div>
-          </div>
+    </div>
   );
 }
