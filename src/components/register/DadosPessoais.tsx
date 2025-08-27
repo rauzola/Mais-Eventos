@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowRight } from "lucide-react";
 import { CadastroData } from "./index";
 import { applyCpfMask, applyPhoneMask, applyDateMask, convertDateToHtmlFormat } from "@/lib/masks";
+import { useToast } from "@/components/ui/toast";
 
 interface DadosPessoaisProps {
   data: CadastroData;
@@ -23,60 +24,62 @@ export const DadosPessoais = ({
   formError, 
   setFormError 
 }: DadosPessoaisProps) => {
+  const { showError } = useToast();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation - todos os campos obrigatórios
-    if (!data.nomeCompleto) {
-      setFormError("Nome Completo é obrigatório.");
+    // Validação detalhada com toast para cada campo
+    if (!data.nomeCompleto?.trim()) {
+      showError("Nome Completo é obrigatório");
       return;
     }
-    if (!data.email) {
-      setFormError("E-mail é obrigatório.");
+    if (!data.email?.trim()) {
+      showError("E-mail é obrigatório");
       return;
     }
-    if (!data.cpf) {
-      setFormError("CPF é obrigatório.");
+    if (!data.cpf?.trim()) {
+      showError("CPF é obrigatório");
       return;
     }
-    if (!data.dataNascimento) {
-      setFormError("Data de Nascimento é obrigatória.");
+    if (!data.dataNascimento?.trim()) {
+      showError("Data de Nascimento é obrigatória");
       return;
     }
     if (!data.estadoCivil) {
-      setFormError("Estado Civil é obrigatório.");
+      showError("Estado Civil é obrigatório");
       return;
     }
     if (!data.tamanhoCamiseta) {
-      setFormError("Tamanho da Camiseta é obrigatório.");
+      showError("Tamanho da Camiseta é obrigatório");
       return;
     }
-    if (!data.profissao) {
-      setFormError("Profissão é obrigatória.");
+    if (!data.profissao?.trim()) {
+      showError("Profissão é obrigatória");
       return;
     }
-    if (!data.telefone) {
-      setFormError("Telefone é obrigatório.");
+    if (!data.telefone?.trim()) {
+      showError("Telefone é obrigatório");
       return;
     }
-    if (!data.contatoEmergencia) {
-      setFormError("Contato de Emergência é obrigatório.");
+    if (!data.contatoEmergencia?.trim()) {
+      showError("Contato de Emergência é obrigatório");
       return;
     }
-    if (!data.telefoneEmergencia) {
-      setFormError("Telefone de Emergência é obrigatório.");
+    if (!data.telefoneEmergencia?.trim()) {
+      showError("Telefone de Emergência é obrigatório");
       return;
     }
-    if (!data.cidade) {
-      setFormError("Cidade é obrigatória.");
+    if (!data.cidade?.trim()) {
+      showError("Cidade é obrigatória");
       return;
     }
     if (!data.senha || data.senha.length < 6) {
-      setFormError("A senha deve ter pelo menos 6 caracteres.");
+      showError("A senha deve ter pelo menos 6 caracteres");
       return;
     }
     if (data.senha !== data.confirmarSenha) {
-      setFormError("As senhas digitadas não são iguais.");
+      showError("As senhas digitadas não são iguais");
       return;
     }
     

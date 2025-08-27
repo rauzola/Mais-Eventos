@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Check } from "lucide-react";
 import { CadastroData } from "./index";
+import { useToast } from "@/components/ui/toast";
 
 interface FichaSaudeProps {
   data: CadastroData;
@@ -26,12 +27,22 @@ export const FichaSaude = ({
   setFormError,
   formLoading 
 }: FichaSaudeProps) => {
+  const { showError } = useToast();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required terms
-    if (!data.termo1 || !data.termo2 || !data.termo3) {
-      setFormError("Você deve aceitar todos os termos para continuar.");
+    // Validate required terms with toast
+    if (!data.termo1) {
+      showError("Você deve aceitar o termo 1 para continuar");
+      return;
+    }
+    if (!data.termo2) {
+      showError("Você deve aceitar o termo 2 para continuar");
+      return;
+    }
+    if (!data.termo3) {
+      showError("Você deve aceitar o termo 3 para continuar");
       return;
     }
     
