@@ -70,6 +70,55 @@ export function convertDateFromHtmlFormat(dateString: string): string {
   return `${day}/${month}/${year}`;
 }
 
+// Validação de senha robusta
+export function validatePassword(password: string): {
+  isValid: boolean;
+  errors: string[];
+  strength: 'weak' | 'medium' | 'strong';
+} {
+  const errors: string[] = [];
+  let score = 0;
+
+  // Verificar comprimento mínimo
+  if (password.length < 6) {
+    errors.push("A senha deve ter pelo menos 6 caracteres");
+  } else {
+    score += 1;
+  }
+
+  // Verificar se tem letras (maiúsculas ou minúsculas)
+  if (!/[a-zA-Z]/.test(password)) {
+    errors.push("A senha deve conter pelo menos uma letra");
+  } else {
+    score += 1;
+  }
+
+  // Verificar se tem números
+  if (!/\d/.test(password)) {
+    errors.push("A senha deve conter pelo menos um número");
+  } else {
+    score += 1;
+  }
+
+  // Verificar se tem caracteres especiais
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push("A senha deve conter pelo menos um caractere especial (!@#$%^&*()_+-=[]{}|;:,.<>?)");
+  } else {
+    score += 1;
+  }
+
+  // Determinar força da senha
+  let strength: 'weak' | 'medium' | 'strong' = 'weak';
+  if (score >= 3) strength = 'medium';
+  if (score >= 4) strength = 'strong';
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    strength
+  };
+}
+
 // Validação de CPF
 export function validateCpf(cpf: string): boolean {
   const cleanCpf = removeCpfMask(cpf);

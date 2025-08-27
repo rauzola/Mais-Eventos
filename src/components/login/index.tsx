@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios, { AxiosError } from "axios";
-import { Heart, Mail, Lock, AlertCircle, CheckCircle } from "lucide-react";
+import { Heart, Mail, Lock, AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useState } from "react";
@@ -27,6 +27,7 @@ export function LoginForm() {
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Função que realiza o login ao enviar o formulário
   const handleLoginSubmit = useCallback(
@@ -141,13 +142,22 @@ export function LoginForm() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Digite sua senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
                     required
                   />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
             </CardContent>
