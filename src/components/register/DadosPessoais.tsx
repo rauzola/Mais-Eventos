@@ -44,6 +44,24 @@ export const DadosPessoais = ({
   const [cidadeSearch, setCidadeSearch] = useState("");
   const [showCidadeSelect, setShowCidadeSelect] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
+  
+  // Estados para validação de email e CPF
+  const [emailValidation, setEmailValidation] = useState<{
+    isValid: boolean;
+    message: string;
+    isChecking: boolean;
+    isFormatValid: boolean;
+  }>({ isValid: true, message: "", isChecking: false, isFormatValid: true });
+  
+  const [cpfValidation, setCpfValidation] = useState<{
+    isValid: boolean;
+    message: string;
+    isChecking: boolean;
+    isFormatValid: boolean;
+  }>({ isValid: true, message: "", isChecking: false, isFormatValid: true });
+  
+  const emailTimeoutRef = useRef<number | null>(null);
+  const cpfTimeoutRef = useRef<number | null>(null);
 
   // Memoização das cidades filtradas para melhor performance
   const filteredCities = useMemo(() => {
@@ -68,11 +86,17 @@ export const DadosPessoais = ({
     }, 300);
   }, []);
 
-  // Limpar timeout quando componente desmontar
+  // Limpar timeouts quando componente desmontar
   useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {
         window.clearTimeout(searchTimeoutRef.current);
+      }
+      if (emailTimeoutRef.current) {
+        window.clearTimeout(emailTimeoutRef.current);
+      }
+      if (cpfTimeoutRef.current) {
+        window.clearTimeout(cpfTimeoutRef.current);
       }
     };
   }, []);
@@ -101,8 +125,24 @@ export const DadosPessoais = ({
       showError("E-mail é obrigatório");
       return;
     }
+    if (!emailValidation.isFormatValid) {
+      showError("Formato de e-mail inválido");
+      return;
+    }
+    if (!emailValidation.isValid) {
+      showError("E-mail já está cadastrado no sistema");
+      return;
+    }
     if (!data.cpf?.trim()) {
       showError("CPF é obrigatório");
+      return;
+    }
+    if (!cpfValidation.isFormatValid) {
+      showError("CPF inválido");
+      return;
+    }
+    if (!cpfValidation.isValid) {
+      showError("CPF já está cadastrado no sistema");
       return;
     }
     if (!data.dataNascimento?.trim()) {
@@ -158,10 +198,6 @@ export const DadosPessoais = ({
   };
 
   // Funções para aplicar máscaras
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const maskedValue = applyCpfMask(e.target.value);
-    updateData({ cpf: maskedValue });
-  };
 
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const maskedValue = applyPhoneMask(e.target.value);
@@ -194,6 +230,108 @@ export const DadosPessoais = ({
     setShowOutraCidade(false);
     updateData({ cidade: "" });
   }, [updateData]);
+
+  // Função para validar email
+  const validateEmail = useCallback(async (email: string) => {
+    if (!email || email.length < 5) {
+      setEmailValidation({ isValid: true, message: "", isChecking: false, isFormatValid: true });
+      return;
+    }
+
+    // Debounce de 500ms para evitar muitas requisições
+    if (emailTimeoutRef.current) {
+      window.clearTimeout(emailTimeoutRef.current);
+    }
+
+    emailTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        setEmailValidation(prev => ({ ...prev, isChecking: true }));
+        
+        const response = await fetch('/api/validate-registration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const emailResult = data.results.email;
+          
+          setEmailValidation({
+            isValid: !emailResult.exists,
+            message: emailResult.message,
+            isChecking: false,
+            isFormatValid: !emailResult.message.includes('inválido')
+          });
+        } else {
+          setEmailValidation({
+            isValid: true,
+            message: "Erro na validação",
+            isChecking: false,
+            isFormatValid: true
+          });
+        }
+      } catch (error) {
+        setEmailValidation({
+          isValid: true,
+          message: "Erro na validação",
+          isChecking: false,
+          isFormatValid: true
+        });
+      }
+    }, 500);
+  }, []);
+
+  // Função para validar CPF
+  const validateCpf = useCallback(async (cpf: string) => {
+    if (!cpf || cpf.length < 11) {
+      setCpfValidation({ isValid: true, message: "", isChecking: false, isFormatValid: true });
+      return;
+    }
+
+    // Debounce de 500ms para evitar muitas requisições
+    if (cpfTimeoutRef.current) {
+      window.clearTimeout(cpfTimeoutRef.current);
+    }
+
+    cpfTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        setCpfValidation(prev => ({ ...prev, isChecking: true }));
+        
+        const response = await fetch('/api/validate-registration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cpf })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const cpfResult = data.results.cpf;
+          
+          setCpfValidation({
+            isValid: !cpfResult.exists,
+            message: cpfResult.message,
+            isChecking: false,
+            isFormatValid: !cpfResult.message.includes('inválido')
+          });
+        } else {
+          setCpfValidation({
+            isValid: true,
+            message: "Erro na validação",
+            isChecking: false,
+            isFormatValid: true
+          });
+        }
+      } catch (error) {
+        setCpfValidation({
+          isValid: true,
+          message: "Erro na validação",
+          isChecking: false,
+          isFormatValid: true
+        });
+      }
+    }, 500);
+  }, []);
 
   // Função para obter a cor da força da senha
   const getPasswordStrengthColor = () => {
@@ -236,11 +374,47 @@ export const DadosPessoais = ({
             id="email"
             type="email"
             value={data.email}
-            onChange={(e) => updateData({ email: e.target.value })}
+            onChange={(e) => {
+              updateData({ email: e.target.value });
+              validateEmail(e.target.value);
+            }}
             placeholder="seu@email.com"
             autoComplete="email"
             required
+            className={`${
+              !emailValidation.isFormatValid ? 'border-red-500 focus-visible:ring-red-500' :
+              !emailValidation.isValid ? 'border-orange-500 focus-visible:ring-orange-500' :
+              'border-green-500 focus-visible:ring-green-500'
+            }`}
           />
+          {emailValidation.isChecking && (
+            <div className="mt-1 text-sm text-blue-600 flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              Verificando...
+            </div>
+          )}
+          {!emailValidation.isChecking && emailValidation.message && (
+            <div className={`mt-1 text-sm ${
+              !emailValidation.isFormatValid ? 'text-red-600' :
+              !emailValidation.isValid ? 'text-orange-600' :
+              'text-green-600'
+            } flex items-center gap-2`}>
+              {!emailValidation.isFormatValid ? (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              ) : !emailValidation.isValid ? (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+              {emailValidation.message}
+            </div>
+          )}
         </div>
         
         <div>
@@ -248,12 +422,45 @@ export const DadosPessoais = ({
           <Input
             id="cpf"
             value={data.cpf}
-            onChange={handleCpfChange}
+            onChange={(e) => {
+              const maskedValue = applyCpfMask(e.target.value);
+              updateData({ cpf: maskedValue });
+              validateCpf(maskedValue);
+            }}
             placeholder="000.000.000-00"
             maxLength={14}
             autoComplete="off"
             required
+            className={`${
+              !cpfValidation.isFormatValid ? 'border-red-500 focus-visible:ring-red-500' :
+              !cpfValidation.isValid ? 'border-orange-500 focus-visible:ring-orange-500' :
+              'border-green-500 focus-visible:ring-green-500'
+            }`}
           />
+          {cpfValidation.isChecking && (
+            <div className="mt-1 text-sm text-blue-600 flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              Verificando...
+            </div>
+          )}
+          {!cpfValidation.isChecking && cpfValidation.message && (
+            <div className={`mt-1 text-sm ${
+              !cpfValidation.isFormatValid ? 'text-red-600' :
+              !cpfValidation.isValid ? 'text-orange-600' :
+              'text-green-600'
+            } flex items-center gap-2`}>
+              {!cpfValidation.isFormatValid ? (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              )}
+              {cpfValidation.message}
+            </div>
+          )}
         </div>
         
         <div>
