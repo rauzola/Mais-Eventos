@@ -225,6 +225,7 @@ export const DadosPessoais = ({
             value={data.nomeCompleto}
             onChange={(e) => updateData({ nomeCompleto: e.target.value })}
             placeholder="Digite seu nome completo"
+            autoComplete="name"
             required
           />
         </div>
@@ -237,6 +238,7 @@ export const DadosPessoais = ({
             value={data.email}
             onChange={(e) => updateData({ email: e.target.value })}
             placeholder="seu@email.com"
+            autoComplete="email"
             required
           />
         </div>
@@ -249,6 +251,7 @@ export const DadosPessoais = ({
             onChange={handleCpfChange}
             placeholder="000.000.000-00"
             maxLength={14}
+            autoComplete="off"
             required
           />
         </div>
@@ -318,6 +321,7 @@ export const DadosPessoais = ({
             onChange={handleTelefoneChange}
             placeholder="(00) 00000-0000"
             maxLength={15}
+            autoComplete="tel"
             required
           />
         </div>
@@ -341,6 +345,7 @@ export const DadosPessoais = ({
             onChange={handleTelefoneEmergenciaChange}
             placeholder="(00) 00000-0000"
             maxLength={15}
+            autoComplete="tel"
             required
           />
         </div>
@@ -430,6 +435,7 @@ export const DadosPessoais = ({
               value={data.senha}
               onChange={(e) => updateData({ senha: e.target.value })}
               placeholder="Mín. 6 chars, letra, número e caractere especial"
+              autoComplete="new-password"
               required
             />
             <Button
@@ -482,6 +488,7 @@ export const DadosPessoais = ({
               value={data.confirmarSenha}
               onChange={(e) => updateData({ confirmarSenha: e.target.value })}
               placeholder="Confirme sua senha"
+              autoComplete="new-password"
               required
             />
             <Button
