@@ -16,7 +16,7 @@ import axios, { AxiosError } from "axios";
 import { Heart, ArrowLeft, Check, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { DadosPessoais } from "./DadosPessoais";
 import { FichaSaude } from "./FichaSaude";
 import { convertDateToHtmlFormat } from "@/lib/masks";
@@ -84,9 +84,9 @@ function RegisterFormContent() {
     termo3: false,
   });
 
-  const updateFormData = (data: Partial<CadastroData>) => {
+  const updateFormData = useCallback((data: Partial<CadastroData>) => {
     setFormData(prev => ({ ...prev, ...data }));
-  };
+  }, []);
 
   const handleNext = () => {
     if (currentStep < 2) {
