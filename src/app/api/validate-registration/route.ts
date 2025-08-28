@@ -46,6 +46,18 @@ function isValidCpf(cpf: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar se as variáveis de ambiente estão configuradas
+    if (!process.env.POSTGRES_URL) {
+      console.warn("POSTGRES_URL não configurada");
+      return NextResponse.json({ 
+        error: "Banco de dados não configurado",
+        results: {
+          email: { exists: false, message: "Verificação indisponível" },
+          cpf: { exists: false, message: "Verificação indisponível" }
+        }
+      }, { status: 503 });
+    }
+
     const body = (await request.json()) as ValidationBody;
     const { email, cpf } = body;
 
@@ -55,9 +67,9 @@ export async function POST(request: NextRequest) {
     if (email) {
       const cleanEmail = email.toLowerCase().trim();
       
-      console.log('Email recebido:', email);
-      console.log('Email limpo:', cleanEmail);
-      console.log('Email é válido:', isValidEmail(cleanEmail));
+      // console.log('Email recebido:', email);
+      // console.log('Email limpo:', cleanEmail);
+      // console.log('Email é válido:', isValidEmail(cleanEmail));
       
       // Primeiro validar o formato
       if (!isValidEmail(cleanEmail)) {
@@ -66,16 +78,29 @@ export async function POST(request: NextRequest) {
           message: "Formato de e-mail inválido"
         };
       } else {
-        // Verificar se já existe no banco
-        const emailExists = await prisma.user.findFirst({
-          where: { email: cleanEmail },
-          select: { id: true }
-        });
+        try {
+          // Verificar se já existe no banco com timeout
+          const emailExists = await Promise.race([
+            prisma.user.findFirst({
+              where: { email: cleanEmail },
+              select: { id: true }
+            }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Database timeout')), 5000)
+            )
+          ]);
 
-        results.email = {
-          exists: !!emailExists,
-          message: emailExists ? "Este e-mail já está cadastrado" : "E-mail disponível"
-        };
+          results.email = {
+            exists: !!emailExists,
+            message: emailExists ? "Este e-mail já está cadastrado" : "E-mail disponível"
+          };
+        } catch (dbError) {
+          console.warn("Erro ao verificar email no banco:", dbError);
+          results.email = {
+            exists: false,
+            message: "Verificação indisponível - tente novamente"
+          };
+        }
       }
     }
 
@@ -84,9 +109,9 @@ export async function POST(request: NextRequest) {
       // Remove formatação do CPF para busca
       const cleanCpf = cpf.replace(/\D/g, '');
       
-      console.log('CPF recebido:', cpf);
-      console.log('CPF limpo:', cleanCpf);
-      console.log('CPF é válido:', isValidCpf(cpf));
+      // console.log('CPF recebido:', cpf);
+      // console.log('CPF limpo:', cleanCpf);
+      // console.log('CPF é válido:', isValidCpf(cpf));
       
       // Primeiro validar o formato
       if (!isValidCpf(cpf)) {
@@ -95,26 +120,39 @@ export async function POST(request: NextRequest) {
           message: "CPF inválido"
         };
       } else {
-        // Buscar por CPF com múltiplas variações de formato
-        const cpfExists = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { cpf: cleanCpf },                    // CPF sem formatação
-              { cpf: cpf },                         // CPF com formatação original
-              { cpf: cpf.replace(/[.-]/g, '') },   // CPF sem pontos e hífens
-              { cpf: cpf.replace(/\./g, '') },     // CPF sem pontos
-              { cpf: cpf.replace(/-/g, '') }       // CPF sem hífens
-            ]
-          },
-          select: { id: true, cpf: true }
-        });
+        try {
+          // Buscar por CPF com múltiplas variações de formato e timeout
+          const cpfExists = await Promise.race([
+            prisma.user.findFirst({
+              where: {
+                OR: [
+                  { cpf: cleanCpf },                    // CPF sem formatação
+                  { cpf: cpf },                         // CPF com formatação original
+                  { cpf: cpf.replace(/[.-]/g, '') },   // CPF sem pontos e hífens
+                  { cpf: cpf.replace(/\./g, '') },     // CPF sem pontos
+                  { cpf: cpf.replace(/-/g, '') }       // CPF sem hífens
+                ]
+              },
+              select: { id: true, cpf: true }
+            }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Database timeout')), 5000)
+            )
+          ]);
 
-        console.log('CPF encontrado no banco:', cpfExists);
+          // console.log('CPF encontrado no banco:', cpfExists);
 
-        results.cpf = {
-          exists: !!cpfExists,
-          message: cpfExists ? "Este CPF já está cadastrado" : "CPF disponível"
-        };
+          results.cpf = {
+            exists: !!cpfExists,
+            message: cpfExists ? "Este CPF já está cadastrado" : "CPF disponível"
+          };
+        } catch (dbError) {
+          console.warn("Erro ao verificar CPF no banco:", dbError);
+          results.cpf = {
+            exists: false,
+            message: "Verificação indisponível - tente novamente"
+          };
+        }
       }
     }
 
@@ -125,6 +163,18 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Erro ao validar registro:", error);
+    
+    // Se for erro de conexão com banco, retornar erro específico
+    if (error instanceof Error && error.message.includes('Can\'t reach database server')) {
+      return NextResponse.json({ 
+        error: "Banco de dados indisponível",
+        results: {
+          email: { exists: false, message: "Verificação indisponível" },
+          cpf: { exists: false, message: "Verificação indisponível" }
+        }
+      }, { status: 503 });
+    }
+    
     return NextResponse.json({ 
       error: "Erro interno do servidor" 
     }, { status: 500 });
