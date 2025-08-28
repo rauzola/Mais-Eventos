@@ -64,6 +64,8 @@ model User {
   medicacaoUso        String?
   restricaoAlimentar  String?
   planoSaude          String?
+  operadora           String?
+  numeroPlano         String?
   
   // Termos e Condições
   termo1              Boolean           @default(false)

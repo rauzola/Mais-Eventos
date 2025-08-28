@@ -30,6 +30,8 @@ interface RegisterProps {
   medicacaoUso?: string;
   restricaoAlimentar?: string;
   planoSaude?: string;
+  operadora?: string;
+  numeroPlano?: string;
   
   // Termos e Condições
   termo1?: boolean;
@@ -59,7 +61,10 @@ export async function POST(request: Request) {
       email: body.email, 
       passwordLength: body.password.length,
       nomeCompleto: body.nomeCompleto,
-      cpf: body.cpf ? "***" : undefined
+      cpf: body.cpf ? "***" : undefined,
+      temPlanoSaude: !!body.planoSaude,
+      temOperadora: !!body.operadora,
+      temNumeroPlano: !!body.numeroPlano
     });
 
     const { 
@@ -82,6 +87,8 @@ export async function POST(request: Request) {
       medicacaoUso,
       restricaoAlimentar,
       planoSaude,
+      operadora,
+      numeroPlano,
       termo1,
       termo2,
       termo3
@@ -199,6 +206,8 @@ export async function POST(request: Request) {
       medicacaoUso: medicacaoUso || null,
       restricaoAlimentar: restricaoAlimentar || null,
       planoSaude: planoSaude || null,
+      operadora: operadora || null,
+      numeroPlano: numeroPlano || null,
       
       // Termos e Condições
       termo1: termo1 || false,

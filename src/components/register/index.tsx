@@ -18,7 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { DadosPessoais } from "./DadosPessoais";
-import { FichaSaude } from "./FichaSaude";
+import FichaSaude from "./FichaSaude";
 import { convertDateToHtmlFormat } from "@/lib/masks";
 import { ToastContainer, useToast, ToastProvider } from "@/components/ui/toast";
 
@@ -44,6 +44,8 @@ export interface CadastroData {
   medicacaoUso: string;
   restricaoAlimentar: string;
   planoSaude: string;
+  operadora: string;
+  numeroPlano: string;
   termo1: boolean;
   termo2: boolean;
   termo3: boolean;
@@ -79,6 +81,8 @@ function RegisterFormContent() {
     medicacaoUso: "",
     restricaoAlimentar: "",
     planoSaude: "",
+    operadora: "",
+    numeroPlano: "",
     termo1: false,
     termo2: false,
     termo3: false,
@@ -134,6 +138,8 @@ function RegisterFormContent() {
         medicacaoUso: formData.medicacaoUso,
         restricaoAlimentar: formData.restricaoAlimentar,
         planoSaude: formData.planoSaude,
+        operadora: formData.operadora,
+        numeroPlano: formData.numeroPlano,
         
         // Termos e Condições
         termo1: formData.termo1,
