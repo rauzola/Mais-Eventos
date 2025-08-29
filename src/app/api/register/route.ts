@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { PrismaGetInstance } from "@/lib/prisma-pg";
-import { Role, EstadoCivil, TamanhoCamiseta } from "@prisma/client";
+import { Role, EstadoCivil, TamanhoCamiseta, User } from "@prisma/client";
 
 interface RegisterProps {
   // Campos básicos
@@ -114,8 +114,8 @@ export async function POST(request: Request) {
       );
     }
     
-    // Hash da senha
-    const hash = bcrypt.hashSync(password, 12);
+    // Hash da senha (assíncrono para melhor performance)
+    const hash = await bcrypt.hash(password, 12);
 
     const prisma = PrismaGetInstance();
 
@@ -196,9 +196,15 @@ export async function POST(request: Request) {
       cpf: cpf ? "***" : null
     });
     
-    const user = await prisma.user.create({
-      data: userData,
+    // Timeout para evitar erro 504 na Vercel
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database operation timeout')), 8000);
     });
+
+    const user = await Promise.race([
+      prisma.user.create({ data: userData }),
+      timeoutPromise
+    ]) as User;
 
 
 
