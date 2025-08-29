@@ -29,7 +29,8 @@ interface RegisterProps {
   alergiaIntolerancia?: string;
   medicacaoUso?: string;
   restricaoAlimentar?: string;
-  planoSaude?: string;
+  numeroPlano?: string;
+  operadora?: string;
   
   // Termos e Condições
   termo1?: boolean;
@@ -52,14 +53,16 @@ export interface RegisterResponse {
  */
 export async function POST(request: Request) {
   try {
-    console.log("=== INÍCIO DO REGISTRO COMPLETO ===");
-    
     const body = (await request.json()) as RegisterProps;
-    console.log("Dados recebidos:", { 
-      email: body.email, 
-      passwordLength: body.password.length,
-      nomeCompleto: body.nomeCompleto,
-      cpf: body.cpf ? "***" : undefined
+    
+    console.log("=== DADOS RECEBIDOS NA API ===");
+    console.log("Dados de saúde:", {
+      portadorDoenca: body.portadorDoenca,
+      alergiaIntolerancia: body.alergiaIntolerancia,
+      medicacaoUso: body.medicacaoUso,
+      restricaoAlimentar: body.restricaoAlimentar,
+      numeroPlano: body.numeroPlano,
+      operadora: body.operadora
     });
 
     const { 
@@ -81,7 +84,8 @@ export async function POST(request: Request) {
       alergiaIntolerancia,
       medicacaoUso,
       restricaoAlimentar,
-      planoSaude,
+      numeroPlano,
+      operadora,
       termo1,
       termo2,
       termo3
@@ -89,18 +93,14 @@ export async function POST(request: Request) {
 
     // Verifica se todos os campos obrigatórios estão presentes
     if (!email || !password || !password2) {
-      console.log("❌ Campos obrigatórios faltando");
       return NextResponse.json(
         { error: "Email e senha são obrigatórios" },
         { status: 400 }
       );
     }
 
-    console.log("✅ Validações básicas passaram");
-
     // Validação da senha
     if (password.length < 6) {
-      console.log("❌ Senha muito curta:", password.length);
       return NextResponse.json(
         { error: "A senha deve ter pelo menos 6 caracteres" },
         { status: 400 }
@@ -108,33 +108,16 @@ export async function POST(request: Request) {
     }
 
     if (password !== password2) {
-      console.log("❌ Senhas não coincidem");
       return NextResponse.json(
         { error: "As senhas não coincidem" },
         { status: 400 }
       );
     }
-
-    console.log("✅ Validações de senha passaram");
     
     // Hash da senha
     const hash = bcrypt.hashSync(password, 12);
-    console.log("✅ Hash da senha gerado");
 
-    console.log("🔌 Conectando ao banco de dados...");
     const prisma = PrismaGetInstance();
-
-    // Testa a conexão
-    try {
-      await prisma.$connect();
-      console.log("✅ Conexão com banco estabelecida");
-    } catch (dbError) {
-      console.error("❌ Erro na conexão com banco:", dbError);
-      return NextResponse.json(
-        { error: "Erro na conexão com banco de dados" },
-        { status: 500 }
-      );
-    }
 
     // Verifica se o usuário já existe (email)
     const existingUserByEmail = await prisma.user.findUnique({
@@ -142,7 +125,6 @@ export async function POST(request: Request) {
     });
 
     if (existingUserByEmail) {
-      console.log("❌ Usuário já existe (email)");
       return NextResponse.json(
         { error: "Este email já está cadastrado" },
         { status: 400 }
@@ -156,7 +138,6 @@ export async function POST(request: Request) {
       });
 
       if (existingUserByCpf) {
-        console.log("❌ CPF já cadastrado");
         return NextResponse.json(
           { error: "Este CPF já está cadastrado" },
           { status: 400 }
@@ -165,7 +146,6 @@ export async function POST(request: Request) {
     }
 
     // Cria o usuário no banco de dados
-    console.log("📝 Criando usuário no banco...");
     
     // Converte strings para enums se necessário
     const estadoCivilEnum = estadoCivil ? 
@@ -198,7 +178,8 @@ export async function POST(request: Request) {
       alergiaIntolerancia: alergiaIntolerancia || null,
       medicacaoUso: medicacaoUso || null,
       restricaoAlimentar: restricaoAlimentar || null,
-      planoSaude: planoSaude || null,
+      numeroPlano: numeroPlano || null,
+      operadora: operadora || null,
       
       // Termos e Condições
       termo1: termo1 || false,
@@ -206,17 +187,20 @@ export async function POST(request: Request) {
       termo3: termo3 || false,
     };
 
-    console.log("Dados do usuário a serem inseridos:", {
+
+
+    console.log("=== CRIANDO USUÁRIO ===");
+    console.log("Dados a serem inseridos:", {
       ...userData,
       password: "[HIDDEN]",
       cpf: cpf ? "***" : null
     });
-
+    
     const user = await prisma.user.create({
       data: userData,
     });
 
-    console.log("✅ Usuário criado com sucesso:", user.id);
+
 
     return NextResponse.json(
       {
@@ -231,17 +215,8 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("=== ERRO NO REGISTRO ===");
-    console.error("Tipo do erro:", typeof error);
-    console.error("Erro:", error);
-    
-    if (error instanceof Error) {
-      console.error("Mensagem:", error.message);
-      console.error("Stack:", error.stack);
-    }
-    
     return NextResponse.json(
-      { error: "Erro interno do servidor. Verifique os logs." },
+      { error: "Erro interno do servidor. Tente novamente." },
       { status: 500 }
     );
   }

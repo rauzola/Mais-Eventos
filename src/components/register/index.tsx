@@ -16,7 +16,7 @@ import axios, { AxiosError } from "axios";
 import { Heart, ArrowLeft, Check, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { DadosPessoais } from "./DadosPessoais";
 import { FichaSaude } from "./FichaSaude";
 import { TermosCondicoes } from "./TermosCondicoes";
@@ -44,7 +44,8 @@ export interface CadastroData {
   alergiaIntolerancia: string;
   medicacaoUso: string;
   restricaoAlimentar: string;
-  planoSaude: string;
+  numeroPlano: string;
+  operadora: string;
   termo1: boolean;
   termo2: boolean;
   termo3: boolean;
@@ -79,11 +80,14 @@ function RegisterFormContent() {
     alergiaIntolerancia: "",
     medicacaoUso: "",
     restricaoAlimentar: "",
-    planoSaude: "",
+    numeroPlano: "",
+    operadora: "",
     termo1: false,
     termo2: false,
     termo3: false,
   });
+
+
 
   const updateFormData = useCallback((data: Partial<CadastroData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -111,6 +115,19 @@ function RegisterFormContent() {
         dataNascimentoFormatada = convertDateToHtmlFormat(formData.dataNascimento);
       }
       
+
+      
+      console.log("=== ENVIANDO DADOS PARA API ===");
+      console.log("FormData completo:", formData);
+      console.log("Campos de saúde:", {
+        operadora: formData.operadora,
+        numeroPlano: formData.numeroPlano,
+        portadorDoenca: formData.portadorDoenca,
+        alergiaIntolerancia: formData.alergiaIntolerancia,
+        medicacaoUso: formData.medicacaoUso,
+        restricaoAlimentar: formData.restricaoAlimentar
+      });
+      
       await axios.post<RegisterResponse>("/api/register", {
         // Campos básicos
         email: formData.email,
@@ -134,7 +151,8 @@ function RegisterFormContent() {
         alergiaIntolerancia: formData.alergiaIntolerancia,
         medicacaoUso: formData.medicacaoUso,
         restricaoAlimentar: formData.restricaoAlimentar,
-        planoSaude: formData.planoSaude,
+        operadora: formData.operadora,
+        numeroPlano: formData.numeroPlano,
         
         // Termos e Condições
         termo1: formData.termo1,
