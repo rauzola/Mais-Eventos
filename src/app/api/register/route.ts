@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { PrismaGetInstance } from "@/lib/prisma-pg";
+import { prisma } from "@/lib/prisma-vercel";
 import { Role, EstadoCivil, TamanhoCamiseta, User } from "@prisma/client";
 
 interface RegisterProps {
@@ -104,10 +104,8 @@ export async function POST(request: Request) {
       );
     }
     
-    // Hash da senha (salt mínimo para performance máxima)
-    const hash = await bcrypt.hash(password, 4);
-
-    const prisma = PrismaGetInstance();
+    // Hash da senha (salt otimizado para Vercel)
+    const hash = await bcrypt.hash(password, 10);
 
     // Verificações em paralelo para maior velocidade
     const [existingUserByEmail, existingUserByCpf] = await Promise.all([
@@ -129,8 +127,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Cria o usuário no banco de dados
-    
     // Conversões de enum simplificadas para performance
     const estadoCivilEnum = estadoCivil && Object.values(EstadoCivil).includes(estadoCivil.toUpperCase() as EstadoCivil) 
       ? estadoCivil.toUpperCase() as EstadoCivil : null;
@@ -169,21 +165,15 @@ export async function POST(request: Request) {
       termo3: termo3 || false,
     };
 
-
-
-
-    
-    // Timeout ultra-agressivo para evitar erro 504 na Vercel
+    // Timeout otimizado para Vercel (15 segundos)
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Database operation timeout')), 3000);
+      setTimeout(() => reject(new Error('Database operation timeout')), 15000);
     });
 
     const user = await Promise.race([
       prisma.user.create({ data: userData }),
       timeoutPromise
     ]) as User;
-
-
 
     return NextResponse.json({
       message: "Usuário criado com sucesso!",
@@ -195,6 +185,16 @@ export async function POST(request: Request) {
       },
     }, { status: 201 });
   } catch (error) {
+    console.error("Erro no registro:", error);
+    
+    // Tratamento específico para timeouts
+    if (error instanceof Error && error.message.includes('timeout')) {
+      return NextResponse.json(
+        { error: "Tempo limite excedido. Tente novamente." },
+        { status: 504 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "Erro interno do servidor. Tente novamente." },
       { status: 500 }

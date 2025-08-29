@@ -2,7 +2,20 @@
   "framework": "nextjs",
   "functions": {
     "src/app/api/register/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 30
+    },
+    "src/app/api/health/route.ts": {
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling"
+  },
+  "regions": ["iad1"],
+  "build": {
+    "env": {
+      "POSTGRES_URL": "@postgres_url",
+      "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling"
     }
   }
 }
