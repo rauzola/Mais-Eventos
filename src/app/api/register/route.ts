@@ -104,15 +104,16 @@ export async function POST(request: Request) {
       );
     }
     
-    // Hash da senha (salt reduzido para melhor performance)
-    const hash = await bcrypt.hash(password, 8);
+    // Hash da senha (salt mínimo para performance máxima)
+    const hash = await bcrypt.hash(password, 4);
 
     const prisma = PrismaGetInstance();
 
-    // Verifica se o usuário já existe (email)
-    const existingUserByEmail = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
-    });
+    // Verificações em paralelo para maior velocidade
+    const [existingUserByEmail, existingUserByCpf] = await Promise.all([
+      prisma.user.findUnique({ where: { email: email.toLowerCase() } }),
+      cpf ? prisma.user.findUnique({ where: { cpf: cpf } }) : null
+    ]);
 
     if (existingUserByEmail) {
       return NextResponse.json(
@@ -121,30 +122,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verifica se o CPF já existe (se fornecido)
-    if (cpf) {
-      const existingUserByCpf = await prisma.user.findUnique({
-        where: { cpf: cpf }
-      });
-
-      if (existingUserByCpf) {
-        return NextResponse.json(
-          { error: "Este CPF já está cadastrado" },
-          { status: 400 }
-        );
-      }
+    if (existingUserByCpf) {
+      return NextResponse.json(
+        { error: "Este CPF já está cadastrado" },
+        { status: 400 }
+      );
     }
 
     // Cria o usuário no banco de dados
     
-    // Converte strings para enums se necessário
-    const estadoCivilEnum = estadoCivil ? 
-      (Object.values(EstadoCivil).includes(estadoCivil.toUpperCase() as EstadoCivil) ? 
-        estadoCivil.toUpperCase() as EstadoCivil : null) : null;
+    // Conversões de enum simplificadas para performance
+    const estadoCivilEnum = estadoCivil && Object.values(EstadoCivil).includes(estadoCivil.toUpperCase() as EstadoCivil) 
+      ? estadoCivil.toUpperCase() as EstadoCivil : null;
     
-    const tamanhoCamisetaEnum = tamanhoCamiseta ? 
-      (Object.values(TamanhoCamiseta).includes(tamanhoCamiseta.toUpperCase() as TamanhoCamiseta) ? 
-        tamanhoCamiseta.toUpperCase() as TamanhoCamiseta : null) : null;
+    const tamanhoCamisetaEnum = tamanhoCamiseta && Object.values(TamanhoCamiseta).includes(tamanhoCamiseta.toUpperCase() as TamanhoCamiseta)
+      ? tamanhoCamiseta.toUpperCase() as TamanhoCamiseta : null;
 
     const userData = {
       email: email.toLowerCase(),
@@ -181,9 +173,9 @@ export async function POST(request: Request) {
 
 
     
-    // Timeout reduzido para evitar erro 504 na Vercel
+    // Timeout ultra-agressivo para evitar erro 504 na Vercel
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Database operation timeout')), 5000);
+      setTimeout(() => reject(new Error('Database operation timeout')), 3000);
     });
 
     const user = await Promise.race([
