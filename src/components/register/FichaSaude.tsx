@@ -5,8 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Check, Heart, Shield, FileText } from 'lucide-react';
+import { ArrowLeft, Check, Heart, Shield } from 'lucide-react';
 
 interface FichaSaudeProps {
   data: {
