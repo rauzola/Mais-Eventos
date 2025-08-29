@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Configurações para produção
-  output: 'standalone',
   
   // Configurações de build
   experimental: {
