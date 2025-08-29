@@ -54,16 +54,6 @@ export interface RegisterResponse {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as RegisterProps;
-    
-    console.log("=== DADOS RECEBIDOS NA API ===");
-    console.log("Dados de saúde:", {
-      portadorDoenca: body.portadorDoenca,
-      alergiaIntolerancia: body.alergiaIntolerancia,
-      medicacaoUso: body.medicacaoUso,
-      restricaoAlimentar: body.restricaoAlimentar,
-      numeroPlano: body.numeroPlano,
-      operadora: body.operadora
-    });
 
     const { 
       email, 
@@ -114,8 +104,8 @@ export async function POST(request: Request) {
       );
     }
     
-    // Hash da senha (assíncrono para melhor performance)
-    const hash = await bcrypt.hash(password, 12);
+    // Hash da senha (salt reduzido para melhor performance)
+    const hash = await bcrypt.hash(password, 8);
 
     const prisma = PrismaGetInstance();
 
@@ -189,16 +179,11 @@ export async function POST(request: Request) {
 
 
 
-    console.log("=== CRIANDO USUÁRIO ===");
-    console.log("Dados a serem inseridos:", {
-      ...userData,
-      password: "[HIDDEN]",
-      cpf: cpf ? "***" : null
-    });
+
     
-    // Timeout para evitar erro 504 na Vercel
+    // Timeout reduzido para evitar erro 504 na Vercel
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Database operation timeout')), 8000);
+      setTimeout(() => reject(new Error('Database operation timeout')), 5000);
     });
 
     const user = await Promise.race([
@@ -208,7 +193,7 @@ export async function POST(request: Request) {
 
 
 
-    const response = {
+    return NextResponse.json({
       message: "Usuário criado com sucesso!",
       user: {
         id: user.id,
@@ -216,13 +201,7 @@ export async function POST(request: Request) {
         role: user.role,
         nomeCompleto: user.nomeCompleto,
       },
-    };
-
-    console.log("=== RESPOSTA ENVIADA ===");
-    console.log("Response:", response);
-    console.log("Status: 201");
-
-    return NextResponse.json(response, { status: 201 });
+    }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: "Erro interno do servidor. Tente novamente." },

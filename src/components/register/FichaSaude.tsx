@@ -51,12 +51,6 @@ export const FichaSaude = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("=== FICHA SAUDE - DADOS FINAIS ===");
-    console.log("Dados completos:", data);
-    console.log("Campos de plano de saúde:", {
-      operadora: data.operadora,
-      numeroPlano: data.numeroPlano
-    });
     setFormError("");
     onNext();
   };
@@ -287,11 +281,9 @@ export const FichaSaude = ({
                         setPlanoSaudeAtivo(isChecked);
                         if (isChecked) {
                           // Inicializar campos quando marcar
-                          console.log("Marcando checkbox, inicializando campos");
                           updateData({ operadora: "", numeroPlano: "" });
                         } else {
                           // Limpar campos quando desmarcar
-                          console.log("Desmarcando checkbox, limpando campos");
                           updateData({ numeroPlano: "", operadora: "" });
                         }
                       }}
@@ -316,10 +308,7 @@ export const FichaSaude = ({
                                        <Textarea
                       id="operadora"
                       value={data.operadora}
-                      onChange={(e) => {
-                        console.log("Atualizando operadora:", e.target.value);
-                        updateData({ operadora: e.target.value });
-                      }}
+                      onChange={(e) => updateData({ operadora: e.target.value })}
                       placeholder="Ex: Unimed, Amil, SulAmérica..."
                       className="border-gray-300 focus:border-green-500 focus:ring-green-500 transition-colors duration-200"
                       rows={2}
@@ -333,10 +322,7 @@ export const FichaSaude = ({
                                        <Textarea
                       id="numeroPlano"
                       value={data.numeroPlano}
-                      onChange={(e) => {
-                        console.log("Atualizando numeroPlano:", e.target.value);
-                        updateData({ numeroPlano: e.target.value });
-                      }}
+                      onChange={(e) => updateData({ numeroPlano: e.target.value })}
                       placeholder="Número da carteirinha ou contrato"
                       className="border-gray-300 focus:border-green-500 focus:ring-green-500 transition-colors duration-200"
                       rows={2}
