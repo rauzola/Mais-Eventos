@@ -128,7 +128,7 @@ function RegisterFormContent() {
         restricaoAlimentar: formData.restricaoAlimentar
       });
       
-      await axios.post<RegisterResponse>("/api/register", {
+      const response = await axios.post<RegisterResponse>("/api/register", {
         // Campos básicos
         email: formData.email,
         password: formData.senha,
@@ -160,15 +160,34 @@ function RegisterFormContent() {
         termo3: formData.termo3,
       });
 
+      console.log("=== RESPOSTA RECEBIDA ===");
+      console.log("Response:", response.data);
+      console.log("Status:", response.status);
+
+      console.log("=== PROCESSANDO SUCESSO ===");
       setFormLoading(false);
       setFormSuccess(true);
       showSuccess("Cadastro realizado com sucesso! Redirecionando...");
-      setTimeout(() => router.push("/login"), 1500);
+      
+      console.log("=== REDIRECIONANDO ===");
+      setTimeout(() => {
+        console.log("Executando router.push...");
+        router.push("/login");
+      }, 1500);
     } catch (error) {
+      console.log("=== ERRO CAPTURADO ===");
+      console.log("Tipo do erro:", typeof error);
+      console.log("Erro:", error);
+      
       if (error instanceof AxiosError) {
+        console.log("=== ERRO AXIOS ===");
+        console.log("Response data:", error.response?.data);
+        console.log("Response status:", error.response?.status);
+        
         const { error: errorMessage } = error.response?.data as RegisterResponse;
         showError(errorMessage || "Erro interno do servidor. Tente novamente.");
       } else {
+        console.log("=== ERRO INESPERADO ===");
         showError("Erro inesperado. Tente novamente.");
       }
       setFormLoading(false);

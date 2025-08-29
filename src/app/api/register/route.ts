@@ -208,18 +208,21 @@ export async function POST(request: Request) {
 
 
 
-    return NextResponse.json(
-      {
-        message: "Usuário criado com sucesso!",
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          nomeCompleto: user.nomeCompleto,
-        },
+    const response = {
+      message: "Usuário criado com sucesso!",
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        nomeCompleto: user.nomeCompleto,
       },
-      { status: 201 }
-    );
+    };
+
+    console.log("=== RESPOSTA ENVIADA ===");
+    console.log("Response:", response);
+    console.log("Status: 201");
+
+    return NextResponse.json(response, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: "Erro interno do servidor. Tente novamente." },
