@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { DadosPessoais } from "./DadosPessoais";
 import { FichaSaude } from "./FichaSaude";
+import { TermosCondicoes } from "./TermosCondicoes";
 import { convertDateToHtmlFormat } from "@/lib/masks";
 import { ToastContainer, useToast, ToastProvider } from "@/components/ui/toast";
 
@@ -89,7 +90,7 @@ function RegisterFormContent() {
   }, []);
 
   const handleNext = () => {
-    if (currentStep < 2) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -175,6 +176,18 @@ function RegisterFormContent() {
             data={formData}
             updateData={updateFormData}
             onPrevious={handlePrevious}
+            onNext={handleNext}
+            formError={formError}
+            setFormError={setFormError}
+            formLoading={formLoading}
+          />
+        );
+      case 3:
+        return (
+          <TermosCondicoes
+            data={formData}
+            updateData={updateFormData}
+            onPrevious={handlePrevious}
             onSubmit={handleSubmit}
             formError={formError}
             setFormError={setFormError}
@@ -229,6 +242,19 @@ function RegisterFormContent() {
                 Ficha de Saúde
               </span>
             </div>
+            
+            <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+            
+            <div className="flex items-center space-x-2">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+              }`}>
+                {currentStep > 3 ? <Check className="h-4 w-4" /> : '3'}
+              </div>
+              <span className={`text-sm ${currentStep >= 3 ? 'text-blue-600' : 'text-gray-500'}`}>
+                Termos e Condições
+              </span>
+            </div>
           </div>
         </div>
 
@@ -236,12 +262,15 @@ function RegisterFormContent() {
         <Card className="animate-in fade-in duration-500">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-blue-600">
-              {currentStep === 1 ? "Dados Pessoais" : "Ficha de Saúde"}
+              {currentStep === 1 ? "Dados Pessoais" : 
+               currentStep === 2 ? "Ficha de Saúde" : "Termos e Condições"}
             </CardTitle>
             <CardDescription>
               {currentStep === 1 
                 ? "Preencha suas informações pessoais básicas" 
-                : "Informações sobre sua saúde e termos de uso"
+                : currentStep === 2
+                ? "Informações sobre sua saúde"
+                : "Leia e aceite os termos para continuar"
               }
             </CardDescription>
           </CardHeader>
