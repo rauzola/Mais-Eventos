@@ -8,9 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build",
-    "build:vercel": "prisma generate && next build"
+
+    "vercel-build": "prisma generate && next build",
+    "build:vercel": "next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
