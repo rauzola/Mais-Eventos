@@ -7,8 +7,10 @@ const nextConfig: NextConfig = {
   // Configurações de build
   experimental: {
     // Desabilitar features experimentais em produção
-    serverComponentsExternalPackages: [],
   },
+  
+  // Configurações de servidor
+  serverExternalPackages: [],
   
   // Configurações de webpack
   webpack: (config, { isServer }) => {
@@ -39,6 +41,9 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  
+  // Configurações de renderização
+  staticPageGenerationTimeout: 120,
 };
 
 export default nextConfig;
