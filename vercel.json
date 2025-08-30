@@ -8,14 +8,5 @@
       "maxDuration": 10
     }
   },
-  "env": {
-    "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling"
-  },
-  "regions": ["iad1"],
-  "build": {
-    "env": {
-      "POSTGRES_URL": "@postgres_url",
-      "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling"
-    }
-  }
+  "regions": ["iad1"]
 }
