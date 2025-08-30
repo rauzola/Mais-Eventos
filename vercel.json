@@ -9,13 +9,13 @@
     }
   },
   "env": {
-    "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling"
+    "POSTGRES_URL_NON_POOLING": "@POSTGRES_URL_NON_POOLING"
   },
   "regions": ["iad1"],
   "build": {
     "env": {
       "POSTGRES_URL": "@postgres_url",
-      "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling"
+      "POSTGRES_URL_NON_POOLING": "@POSTGRES_URL_NON_POOLING"
     }
   }
 }
