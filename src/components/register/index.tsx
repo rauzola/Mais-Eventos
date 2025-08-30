@@ -16,9 +16,10 @@ import axios, { AxiosError } from "axios";
 import { Heart, ArrowLeft, Check, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { DadosPessoais } from "./DadosPessoais";
 import { FichaSaude } from "./FichaSaude";
+import { TermosCondicoes } from "./TermosCondicoes";
 import { convertDateToHtmlFormat } from "@/lib/masks";
 import { ToastContainer, useToast, ToastProvider } from "@/components/ui/toast";
 
@@ -43,7 +44,8 @@ export interface CadastroData {
   alergiaIntolerancia: string;
   medicacaoUso: string;
   restricaoAlimentar: string;
-  planoSaude: string;
+  numeroPlano: string;
+  operadora: string;
   termo1: boolean;
   termo2: boolean;
   termo3: boolean;
@@ -78,18 +80,21 @@ function RegisterFormContent() {
     alergiaIntolerancia: "",
     medicacaoUso: "",
     restricaoAlimentar: "",
-    planoSaude: "",
+    numeroPlano: "",
+    operadora: "",
     termo1: false,
     termo2: false,
     termo3: false,
   });
+
+
 
   const updateFormData = useCallback((data: Partial<CadastroData>) => {
     setFormData(prev => ({ ...prev, ...data }));
   }, []);
 
   const handleNext = () => {
-    if (currentStep < 2) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -109,6 +114,8 @@ function RegisterFormContent() {
       if (formData.dataNascimento.includes('/')) {
         dataNascimentoFormatada = convertDateToHtmlFormat(formData.dataNascimento);
       }
+      
+
       
       await axios.post<RegisterResponse>("/api/register", {
         // Campos básicos
@@ -133,7 +140,8 @@ function RegisterFormContent() {
         alergiaIntolerancia: formData.alergiaIntolerancia,
         medicacaoUso: formData.medicacaoUso,
         restricaoAlimentar: formData.restricaoAlimentar,
-        planoSaude: formData.planoSaude,
+        operadora: formData.operadora,
+        numeroPlano: formData.numeroPlano,
         
         // Termos e Condições
         termo1: formData.termo1,
@@ -144,7 +152,10 @@ function RegisterFormContent() {
       setFormLoading(false);
       setFormSuccess(true);
       showSuccess("Cadastro realizado com sucesso! Redirecionando...");
-      setTimeout(() => router.push("/login"), 1500);
+      
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     } catch (error) {
       if (error instanceof AxiosError) {
         const { error: errorMessage } = error.response?.data as RegisterResponse;
@@ -172,6 +183,18 @@ function RegisterFormContent() {
       case 2:
         return (
           <FichaSaude
+            data={formData}
+            updateData={updateFormData}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            formError={formError}
+            setFormError={setFormError}
+            formLoading={formLoading}
+          />
+        );
+      case 3:
+        return (
+          <TermosCondicoes
             data={formData}
             updateData={updateFormData}
             onPrevious={handlePrevious}
@@ -229,6 +252,19 @@ function RegisterFormContent() {
                 Ficha de Saúde
               </span>
             </div>
+            
+            <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+            
+            <div className="flex items-center space-x-2">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+              }`}>
+                {currentStep > 3 ? <Check className="h-4 w-4" /> : '3'}
+              </div>
+              <span className={`text-sm ${currentStep >= 3 ? 'text-blue-600' : 'text-gray-500'}`}>
+                Termos e Condições
+              </span>
+            </div>
           </div>
         </div>
 
@@ -236,12 +272,15 @@ function RegisterFormContent() {
         <Card className="animate-in fade-in duration-500">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-blue-600">
-              {currentStep === 1 ? "Dados Pessoais" : "Ficha de Saúde"}
+              {currentStep === 1 ? "Dados Pessoais" : 
+               currentStep === 2 ? "Ficha de Saúde" : "Termos e Condições"}
             </CardTitle>
             <CardDescription>
               {currentStep === 1 
                 ? "Preencha suas informações pessoais básicas" 
-                : "Informações sobre sua saúde e termos de uso"
+                : currentStep === 2
+                ? "Informações sobre sua saúde"
+                : "Leia e aceite os termos para continuar"
               }
             </CardDescription>
           </CardHeader>

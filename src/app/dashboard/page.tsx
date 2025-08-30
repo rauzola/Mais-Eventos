@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma-vercel";
 import { LogoutButton } from "@/components/LogoutButton";
 
+// Force dynamic rendering since this page uses cookies
+export const dynamic = 'force-dynamic';
+
 export default async function Dashboard() {
   try {
     // Verifica se o usuário está autenticado

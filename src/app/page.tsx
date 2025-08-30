@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma-vercel";
 
+// Force dynamic rendering since this page uses cookies
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   try {
     // Verifica se o usuário está autenticado
