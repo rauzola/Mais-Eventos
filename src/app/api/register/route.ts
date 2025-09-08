@@ -175,6 +175,42 @@ export async function POST(request: Request) {
       timeoutPromise
     ]) as User;
 
+    // Enviar email de boas-vindas (não bloqueia o cadastro se falhar)
+    try {
+      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nomeCompleto: user.nomeCompleto || '',
+          email: user.email,
+          cpf: user.cpf || '',
+          dataNascimento: user.dataNascimento ? new Date(user.dataNascimento).toLocaleDateString('pt-BR') : '',
+          estadoCivil: user.estadoCivil || '',
+          tamanhoCamiseta: user.tamanhoCamiseta || '',
+          profissao: user.profissao || '',
+          telefone: user.telefone || '',
+          contatoEmergencia: user.contatoEmergencia || '',
+          telefoneEmergencia: user.telefoneEmergencia || '',
+          cidade: user.cidade || '',
+          portadorDoenca: user.portadorDoenca || '',
+          alergiaIntolerancia: user.alergiaIntolerancia || '',
+          medicacaoUso: user.medicacaoUso || '',
+          restricaoAlimentar: user.restricaoAlimentar || '',
+          numeroPlano: user.numeroPlano || '',
+          operadora: user.operadora || '',
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        console.error('Erro ao enviar email de boas-vindas:', await emailResponse.text());
+      }
+    } catch (emailError) {
+      console.error('Erro ao enviar email de boas-vindas:', emailError);
+      // Não falha o cadastro se o email não for enviado
+    }
+
     return NextResponse.json({
       message: "Usuário criado com sucesso!",
       user: {

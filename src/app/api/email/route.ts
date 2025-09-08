@@ -3,17 +3,37 @@ import { Resend } from 'resend';
 import React from 'react';
 import { EmailTemplate } from '@/components/Email/bem-vindo';
 
-
-
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST() {
+interface EmailData {
+  nomeCompleto: string;
+  email: string;
+  cpf: string;
+  dataNascimento: string;
+  estadoCivil: string;
+  tamanhoCamiseta: string;
+  profissao: string;
+  telefone: string;
+  contatoEmergencia: string;
+  telefoneEmergencia: string;
+  cidade: string;
+  portadorDoenca: string;
+  alergiaIntolerancia: string;
+  medicacaoUso: string;
+  restricaoAlimentar: string;
+  numeroPlano: string;
+  operadora: string;
+}
+
+export async function POST(request: Request) {
   try {
+    const emailData: EmailData = await request.json();
+
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_FROM}`,
-      to: ['raul_sigoli@hotmail.com'],
-      subject: 'asdasd world',
-      react: React.createElement(EmailTemplate, { firstName: 'Raul Sigoli' }),
+      to: [emailData.email],
+      subject: 'Bem-vindo(a) ao Projeto Mais Vida! 🏥',
+      react: React.createElement(EmailTemplate, emailData),
     });
 
     if (error) {
