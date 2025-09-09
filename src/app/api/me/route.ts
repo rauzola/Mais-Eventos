@@ -16,10 +16,10 @@ export async function GET() {
 
     if (!session?.User) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-    const { id, email } = session.User as { id: string; email: string };
+    const { id, email, nomeCompleto } = session.User as { id: string; email: string; nomeCompleto?: string | null };
     const role = (session.User as unknown as { role?: string })?.role;
 
-    return NextResponse.json({ id, email, role: role ?? "USER" }, { status: 200 });
+    return NextResponse.json({ id, email, nomeCompleto: nomeCompleto || null, role: role ?? "USER" }, { status: 200 });
   } catch (error) {
     console.error("/api/me erro:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
