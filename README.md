@@ -1,232 +1,241 @@
-# Mais Eventos - Sistema de Autenticação
+## Mais Eventos — Sistema de Gerenciamento de Eventos
 
-## Visão Geral
+Plataforma para gestão completa de eventos. Pessoas poderão se cadastrar, se inscrever em eventos disponíveis, confirmar presença via QR Code e geolocalização (garantindo presença real), e o conselho/admin poderá acompanhar inscrições, presenças e engajamento com relatórios detalhados.
 
-Este é um sistema de autenticação simplificado para a aplicação Mais Eventos, desenvolvido com Next.js 15, Prisma ORM e PostgreSQL (Supabase).
+### Principais módulos (MVP e próximos)
+- **Cadastro e Autenticação**: criação de conta, login, sessões com cookie HTTP-only, logout seguro.
+- **Eventos e Inscrições**: catálogo de eventos, inscrição com regras e limites.
+- **Check-in Presença**: QR Code + geolocalização para validação no local.
+- **Área do Admin (Conselho)**: visão de inscritos, presentes, faltas, tempo sem participação e relatórios.
 
-## Funcionalidades
+## Tecnologias e como foram usadas
+- **Next.js 15 (App Router)**: páginas, APIs serverless (`/app/api/*`) e middleware para headers de segurança/performance.
+- **React 19 + TypeScript**: UI e tipagem do projeto.
+- **Tailwind CSS**: estilização utilitária e componentes com `src/components/ui/*`.
+- **Prisma ORM**: modelagem e acesso ao PostgreSQL (Supabase), migrations em `prisma/migrations`.
+- **PostgreSQL (Supabase)**: banco relacional para usuários, sessões e (futuro) entidades de eventos/inscrições.
+- **bcrypt**: hash de senhas e geração de tokens de sessão derivados de segredo + credenciais.
+- **Cookies HTTP-only**: sessão segura via `auth-session` com expiração e invalidação no banco.
 
-- **Cadastro**: Criação de conta com email e senha
-- **Login**: Autenticação com email e senha
-- **Sessões**: Sistema de sessões baseado em cookies HTTP-only
-- **Dashboard**: Página protegida para usuários autenticados
-- **Logout**: Encerramento seguro de sessão
-
-## Tecnologias
-
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Banco de Dados**: PostgreSQL (Supabase)
-- **ORM**: Prisma
-- **Autenticação**: bcrypt para hash de senhas, sessões baseadas em tokens
-- **Gerenciador de Pacotes**: Yarn
-
-## Estrutura do Projeto
-
+## Estrutura do Projeto (resumo)
 ```
 src/
 ├── app/
 │   ├── api/
-│   │   ├── auth/
-│   │   │   └── logout/
-│   │   │       └── route.ts
-│   │   ├── login/
-│   │   │   └── route.ts
-│   │   └── register/
-│   │       └── route.ts
 │   ├── cadastro/
-│   │   └── page.tsx
 │   ├── dashboard/
-│   │   └── page.tsx
 │   └── login/
-│       └── page.tsx
 ├── components/
-│   ├── login/
-│   │   └── index.tsx
 │   ├── register/
-│   │   └── index.tsx
 │   └── ui/
-└── lib/
-    ├── generate-session.ts
-    └── prisma-pg.ts
+├── lib/
+└── middleware.ts
 prisma/
 └── schema.prisma
 ```
 
-## Configuração
+## Configuração e Execução
+
+### Requisitos
+- Node.js 20+
+- Yarn
+- Banco PostgreSQL (Supabase recomendado)
 
 ### Variáveis de Ambiente
+- Crie um arquivo `.env` com as credenciais sensíveis (não vai para o Git).
+- Se quiser compartilhar variáveis seguras para desenvolvimento, use `.env.local` (este pode ir para o Git).
 
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
-
+Exemplo mínimo do `.env`:
 ```env
 # Banco de Dados
 POSTGRES_URL="sua_url_do_supabase"
 POSTGRES_URL_NON_POOLING="sua_url_direta_do_supabase"
 
-# JWT (opcional, usado para gerar tokens de sessão)
+# JWT/Segredo usado na geração de sessão
 SUPABASE_JWT_SECRET="seu_secret_jwt"
 ```
 
 ### Instalação
-
-1. Instale as dependências:
 ```bash
 yarn install
-```
-
-2. Configure o banco de dados:
-```bash
 yarn prisma migrate dev
-```
-
-3. Gere o cliente Prisma:
-```bash
 yarn prisma generate
-```
-
-4. Inicie o servidor de desenvolvimento:
-```bash
 yarn dev
 ```
 
-## Uso
-
-### Cadastro
-
-1. Acesse `/cadastro`
-2. Preencha email e senha (mínimo 6 caracteres)
-3. Confirme a senha
-4. Clique em "Cadastrar"
-
-### Login
-
-1. Acesse `/login`
-2. Digite email e senha
-3. Clique em "Entrar"
-4. Será redirecionado para `/dashboard`
-
-### Dashboard
-
-- Página protegida que só pode ser acessada por usuários autenticados
-- Mostra informações do usuário e da sessão
-- Botão para fazer logout
-
-### Logout
-
-- Clique em "Sair" no dashboard
-- A sessão será invalidada no banco
-- O cookie será removido
-- Redirecionamento para a página de login
-
-## Segurança
-
-- **Senhas**: Criptografadas com bcrypt (salt rounds: 12)
-- **Cookies**: HTTP-only, não acessíveis via JavaScript
-- **Sessões**: Tokens únicos e seguros
-- **Validação**: Verificação de email e senha obrigatórios
-- **Proteção**: Redirecionamento automático para usuários não autenticados
-
-## Banco de Dados
-
-### Tabelas
-
-- **users**: Armazena informações dos usuários
-- **sessions**: Gerencia sessões ativas
-
-### Schema Prisma
-
-```prisma
-model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Sessions  Sessions[]
-  
-  @@map("users")
-}
-
-model Sessions {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String
-  expiresAt DateTime
-  valid     Boolean  @default(true)
-  createdAt DateTime @default(now())
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("sessions")
-}
-```
-
-## API Endpoints
-
-### POST /api/register
-- **Body**: `{ email, password, password2 }`
-- **Resposta**: `{ message, user: { id, email } }`
-
-### POST /api/login
-- **Body**: `{ email, password }`
-- **Resposta**: `{ session: "token" }`
-- **Cookie**: Define `auth-session`
-
-### GET /api/login
-- **Verificação**: Status da autenticação
-- **Resposta**: `{ authenticated: true }` ou `{ error: "Não autenticado" }`
-
-### POST /api/auth/logout
-- **Ação**: Invalida sessão e remove cookie
-- **Resposta**: `{ message: "Logout realizado com sucesso" }`
-
-## Desenvolvimento
-
-### Comandos Úteis
-
+### Scripts úteis
 ```bash
-# Desenvolvimento
-yarn dev
-
-# Build
 yarn build
-
-# Lint
 yarn lint
-
-# Prisma
-yarn prisma studio          # Interface visual do banco
-yarn prisma migrate dev     # Criar e aplicar migração
-yarn prisma generate        # Gerar cliente Prisma
-yarn prisma db push         # Sincronizar schema (sem migração)
+yarn prisma studio
+yarn prisma db push
 ```
 
-### Estrutura de Sessões
+## Fluxo de Autenticação (exemplos reais do código)
 
-O sistema usa um token de sessão único gerado a partir de:
-- Secret JWT
-- Email do usuário
-- Hash da senha
-- Timestamp atual
+### Login API — cria sessão, define cookie
+```1:35:src/app/api/login/route.ts
+export async function GET() {
+  try {
+    const cookieStore = await cookies();
+    const authCookie = cookieStore.get("auth-session");
 
-Este token é criptografado com bcrypt e armazenado no banco junto com:
-- ID do usuário
-- Data de expiração (24 horas)
-- Status de validade
+    const sessionToken = authCookie?.value || "";
 
-## Próximos Passos
+    if (!sessionToken) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+```
 
-- [ ] Implementar recuperação de senha
-- [ ] Adicionar verificação de email
-- [ ] Implementar refresh de sessão
-- [ ] Adicionar rate limiting
-- [ ] Implementar auditoria de ações
-- [ ] Adicionar autenticação de dois fatores (2FA)
+```81:132:src/app/api/login/route.ts
+// Verifica a senha
+const passwordMatch = await bcrypt.compare(password, user.password);
+if (!passwordMatch) {
+  return NextResponse.json<LoginResponse>(
+    { error: "Credenciais inválidas" }, 
+    { status: 401 }
+  );
+}
 
-## Suporte
+// Gera token de sessão
+const sessionToken = GenerateSession({
+  email,
+  passwordHash: user.password,
+});
 
-Para dúvidas ou problemas, verifique:
-1. Logs do console do navegador
-2. Logs do servidor Next.js
-3. Status da conexão com o banco de dados
-4. Validação das variáveis de ambiente
+// Cria a sessão no banco
+await prisma.sessions.create({
+  data: {
+    userId: user.id,
+    token: sessionToken,
+    valid: true,
+    expiresAt: addHours(new Date(), 24),
+  },
+});
+
+// Define o cookie
+const response = NextResponse.json({ session: sessionToken, role: user.role }, { status: 200 });
+response.cookies.set({ name: "auth-session", value: sessionToken, httpOnly: true, expires: addHours(new Date(), 24), path: "/", secure: process.env.NODE_ENV === "production", sameSite: "lax" });
+return response;
+```
+
+### Geração do token de sessão
+```13:23:src/lib/generate-session.ts
+export function GenerateSession({
+  email,
+  passwordHash,
+}: GenerateSessionDTO): string {
+  const secret = process.env.SUPABASE_JWT_SECRET || "default-secret-key";
+  const plainToken = `${secret}+${email}+${passwordHash}+${new Date().getTime()}`;
+  const hash = bcrypt.hashSync(plainToken, 12);
+  return hash;
+}
+```
+
+### Logout API — invalida sessão e remove cookie
+```18:36:src/app/api/auth/logout/route.ts
+if (authSession?.value) {
+  await prisma.sessions.updateMany({
+    where: { token: authSession.value },
+    data: { valid: false }
+  });
+}
+const response = NextResponse.json({ success: true });
+response.cookies.delete("auth-session");
+return response;
+```
+
+### Middleware — headers de segurança e cache em APIs
+```4:13:src/middleware.ts
+export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    const response = NextResponse.next();
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+```
+
+## Fluxo de Cadastro (frontend + backend)
+
+### Formulário multi-etapas (cliente)
+```270:289:src/components/register/index.tsx
+<Card className="animate-in fade-in duration-500">
+  <CardHeader className="text-center">
+    <CardTitle className="text-2xl text-blue-600">
+      {currentStep === 1 ? "Dados Pessoais" : 
+       currentStep === 2 ? "Ficha de Saúde" : "Termos e Condições"}
+    </CardTitle>
+    <CardDescription>
+      {currentStep === 1 
+        ? "Preencha suas informações pessoais básicas" 
+        : currentStep === 2
+        ? "Informações sobre sua saúde"
+        : "Leia e aceite os termos para continuar"}
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    {renderStepContent()}
+  </CardContent>
+</Card>
+```
+
+### API de registro (servidor)
+```84:109:src/app/api/register/route.ts
+if (!email || !password || !password2) {
+  return NextResponse.json(
+    { error: "Email e senha são obrigatórios" },
+    { status: 400 }
+  );
+}
+if (password.length < 6) {
+  return NextResponse.json(
+    { error: "A senha deve ter pelo menos 6 caracteres" },
+    { status: 400 }
+  );
+}
+if (password !== password2) {
+  return NextResponse.json(
+    { error: "As senhas não coincidem" },
+    { status: 400 }
+  );
+}
+const hash = await bcrypt.hash(password, 10);
+```
+
+```168:176:src/app/api/register/route.ts
+const user = await Promise.race([
+  prisma.user.create({ data: userData }),
+  timeoutPromise
+]) as User;
+```
+
+## Endpoints (atual)
+- **POST** `/api/register`
+- **POST** `/api/login`
+- **GET** `/api/login` (verificar autenticação)
+- **POST** `/api/auth/logout` e **GET** `/api/auth/logout`
+- **GET** `/api/me`, `/api/users`, `/api/email` (boas-vindas), `/api/validate-registration`, `/api/test-cpf`, `/api/debug-cpf`, etc.
+
+## Roadmap — Próximas Melhorias
+- [ ] Página de lista de eventos e detalhes do evento
+- [ ] Inscrição com regras (limite de vagas, período, campos extras)
+- [ ] Emissão de QR Code por inscrição e validação no check-in
+- [ ] Validação de geolocalização no check-in (raio configurável e antifraude)
+- [ ] Dashboard do Admin: inscritos, presentes, faltas e engajamento
+- [ ] Relatórios (CSV/PDF): frequência, tempo sem participação, perfil por cidade
+- [ ] Perfis e papéis (USER, ADMIN, CONSELHO) com autorização por rota
+- [ ] Recuperação de senha e verificação de e-mail
+- [ ] Rate limiting nas APIs públicas e logs de auditoria
+- [ ] Testes E2E e de integração (Playwright/Vitest)
+
+## Visão de Produto
+O Mais Eventos será um sistema completo de gestão de eventos comunitários/institucionais. Cidadãos se cadastram, encontram eventos, inscrevem-se e confirmam presença no local via QR Code + geolocalização. O conselho/admin acompanha engajamento, identifica quem não participa há muito tempo e emite relatórios para tomada de decisão.
+
+## Boas Práticas e Segurança
+- Hash de senhas com bcrypt; cookies HTTP-only com SameSite e Secure em produção.
+- Sessões persistidas com expiração e invalidação ativa no logout.
+- Headers de segurança em APIs via middleware.
+- Variáveis sensíveis em `.env` (ignorado). Use `.env.local` para valores que podem ser versionados.
+
+## Créditos
+Projeto desenvolvido com apoio e ideias de **Raul Sigoli** e do **Projeto Mais Vida**.
