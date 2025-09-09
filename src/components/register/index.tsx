@@ -176,7 +176,6 @@ function RegisterFormContent() {
             data={formData}
             updateData={updateFormData}
             onNext={handleNext}
-            formError={formError}
             setFormError={setFormError}
           />
         );
