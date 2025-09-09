@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Eye, EyeOff, Search } from "lucide-react";
 import { CadastroData } from "./index";
-import { applyCpfMask, applyPhoneMask, applyDateMask, convertDateToHtmlFormat, validatePassword } from "@/lib/masks";
+import { applyCpfMask, applyPhoneMask, applyDateMask, validatePassword } from "@/lib/masks";
 import { citiesParana } from "@/lib/cities-parana";
 import { useToast } from "@/components/ui/toast";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -15,7 +15,6 @@ interface DadosPessoaisProps {
   data: CadastroData;
   updateData: (data: Partial<CadastroData>) => void;
   onNext: () => void;
-  formError: string;
   setFormError: (error: string) => void;
 }
 
@@ -23,7 +22,6 @@ export const DadosPessoais = ({
   data, 
   updateData, 
   onNext, 
-  formError, 
   setFormError 
 }: DadosPessoaisProps) => {
   const { showError } = useToast();
@@ -59,6 +57,12 @@ export const DadosPessoais = ({
     isChecking: boolean;
     isFormatValid: boolean;
   }>({ isValid: true, message: "", isChecking: false, isFormatValid: true });
+  
+  // Estado para validação de telefones diferentes
+  const [telefoneValidation, setTelefoneValidation] = useState<{
+    isValid: boolean;
+    message: string;
+  }>({ isValid: true, message: "" });
   
   const emailTimeoutRef = useRef<number | null>(null);
   const cpfTimeoutRef = useRef<number | null>(null);
@@ -100,6 +104,13 @@ export const DadosPessoais = ({
       }
     };
   }, []);
+
+  // Validar telefones quando os dados mudarem
+  useEffect(() => {
+    if (data.telefone && data.telefoneEmergencia) {
+      validateTelefonesDiferentes(data.telefone, data.telefoneEmergencia);
+    }
+  }, [data.telefone, data.telefoneEmergencia]);
 
   // Validar senha sempre que ela mudar
   useEffect(() => {
@@ -193,8 +204,35 @@ export const DadosPessoais = ({
       return;
     }
     
+    // Validação dos telefones diferentes
+    if (!validateTelefonesDiferentes(data.telefone, data.telefoneEmergencia)) {
+      showError("O telefone de emergência deve ser diferente do telefone principal");
+      return;
+    }
+    
     setFormError("");
     onNext();
+  };
+
+  // Função para validar se os telefones são diferentes
+  const validateTelefonesDiferentes = (telefone: string, telefoneEmergencia: string) => {
+    // Remove todos os caracteres não numéricos para comparação
+    const telefoneNumeros = telefone.replace(/\D/g, '');
+    const telefoneEmergenciaNumeros = telefoneEmergencia.replace(/\D/g, '');
+    
+    if (telefoneNumeros && telefoneEmergenciaNumeros && telefoneNumeros === telefoneEmergenciaNumeros) {
+      setTelefoneValidation({
+        isValid: false,
+        message: "O telefone de emergência deve ser diferente do telefone principal"
+      });
+      return false;
+    } else {
+      setTelefoneValidation({
+        isValid: true,
+        message: ""
+      });
+      return true;
+    }
   };
 
   // Funções para aplicar máscaras
@@ -202,11 +240,17 @@ export const DadosPessoais = ({
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const maskedValue = applyPhoneMask(e.target.value);
     updateData({ telefone: maskedValue });
+    
+    // Valida se os telefones são diferentes
+    validateTelefonesDiferentes(maskedValue, data.telefoneEmergencia);
   };
 
   const handleTelefoneEmergenciaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const maskedValue = applyPhoneMask(e.target.value);
     updateData({ telefoneEmergencia: maskedValue });
+    
+    // Valida se os telefones são diferentes
+    validateTelefonesDiferentes(data.telefone, maskedValue);
   };
 
   const handleDataNascimentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,7 +315,7 @@ export const DadosPessoais = ({
             isFormatValid: true
           });
         }
-      } catch (error) {
+      } catch {
         setEmailValidation({
           isValid: true,
           message: "Erro na validação",
@@ -322,7 +366,7 @@ export const DadosPessoais = ({
             isFormatValid: true
           });
         }
-      } catch (error) {
+      } catch {
         setCpfValidation({
           isValid: true,
           message: "Erro na validação",
@@ -530,7 +574,11 @@ export const DadosPessoais = ({
             maxLength={15}
             autoComplete="tel"
             required
+            className={!telefoneValidation.isValid ? "border-red-500" : ""}
           />
+          {!telefoneValidation.isValid && (
+            <p className="text-red-500 text-sm mt-1">{telefoneValidation.message}</p>
+          )}
         </div>
         
         <div>
@@ -554,7 +602,11 @@ export const DadosPessoais = ({
             maxLength={15}
             autoComplete="tel"
             required
+            className={!telefoneValidation.isValid ? "border-red-500" : ""}
           />
+          {!telefoneValidation.isValid && (
+            <p className="text-red-500 text-sm mt-1">{telefoneValidation.message}</p>
+          )}
         </div>
         
         <div>
