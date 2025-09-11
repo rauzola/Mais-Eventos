@@ -1,7 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, cleanupPrisma } from "@/lib/prisma-vercel";
 
-type PrismaEvents = { event: { findMany(args: unknown): Promise<unknown[]>; create(args: unknown): Promise<unknown> } };
+type EventStatus = "ativo" | "inativo";
+type SortOrder = "asc" | "desc";
+
+type EventRecord = {
+  id: string;
+  title: string;
+  short_description?: string | null;
+  description?: string | null;
+  category?: string | null;
+  location?: string | null;
+  organizer_name?: string | null;
+  image_url?: string | null;
+  price: number;
+  status: EventStatus;
+  event_date_start?: Date | null;
+  event_time_start?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type EventCreateInput = {
+  title: string;
+  short_description?: string | null;
+  description?: string | null;
+  category?: string | null;
+  location?: string | null;
+  organizer_name?: string | null;
+  image_url?: string | null;
+  price?: number;
+  status?: EventStatus;
+  event_date_start?: Date | string | null;
+  event_time_start?: string | null;
+};
+
+type EventsFindManyArgs = {
+  where?: { status?: EventStatus };
+  orderBy?: { event_date_start?: SortOrder };
+  take?: number;
+};
+
+type EventsCreateArgs = { data: EventCreateInput };
+
+type PrismaEvents = {
+  event: {
+    findMany(args: EventsFindManyArgs): Promise<EventRecord[]>;
+    create(args: EventsCreateArgs): Promise<EventRecord>;
+  };
+};
 const db = prisma as unknown as PrismaEvents;
 
 export const revalidate = 0;
@@ -9,13 +56,15 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status") as "ativo" | "inativo" | null;
-    const where = status ? { status } : {};
+    const statusParam = searchParams.get("status");
+    const status: EventStatus | undefined =
+      statusParam === "ativo" || statusParam === "inativo" ? (statusParam as EventStatus) : undefined;
+    const where: { status?: EventStatus } | undefined = status ? { status } : undefined;
     const events = await db.event.findMany({
-      where: where as any,
+      where,
       orderBy: { event_date_start: "desc" },
       take: 200,
-    } as any);
+    });
     return NextResponse.json({ events }, { status: 200 });
   } catch (error) {
     console.error("GET /api/events erro:", error);
@@ -27,8 +76,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const created = await db.event.create({ data: body } as any);
+    const body = (await request.json()) as Partial<EventCreateInput>;
+    const data: EventCreateInput = {
+      title: body.title ?? "",
+      short_description: body.short_description ?? null,
+      description: body.description ?? null,
+      category: body.category ?? null,
+      location: body.location ?? null,
+      organizer_name: body.organizer_name ?? null,
+      image_url: body.image_url ?? null,
+      price: typeof body.price === "number" ? body.price : 0,
+      status: body.status ?? "ativo",
+      event_date_start: body.event_date_start ?? null,
+      event_time_start: body.event_time_start ?? null,
+    };
+    const created = await db.event.create({ data });
     return NextResponse.json({ event: created }, { status: 201 });
   } catch (error) {
     console.error("POST /api/events erro:", error);
