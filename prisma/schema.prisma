@@ -88,3 +88,28 @@ model Sessions {
   
   @@map("sessions")
 }
+
+// --- Eventos básicos para listagem/CRUD ---
+enum EventStatus {
+  ativo
+  inativo
+}
+
+model Event {
+  id                String      @id @default(cuid())
+  title             String
+  short_description String?
+  description       String?
+  category          String?
+  location          String?
+  organizer_name    String?
+  image_url         String?
+  price             Float       @default(0)
+  status            EventStatus @default(ativo)
+  event_date_start  DateTime?
+  event_time_start  String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@map("events")
+}
