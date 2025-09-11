@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { MaybeSidebar } from "@/components/Sidebar/MaybeSidebar";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma-vercel";
@@ -10,7 +14,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Sistema de Autenticação - Projeto Mais Vida",
-  description: "Sistema de autenticação e autorização com controle de permissões",
+  description:
+    "Sistema de autenticação e autorização com controle de permissões",
 };
 
 export default async function RootLayout({
@@ -21,6 +26,9 @@ export default async function RootLayout({
   // Busca role do usuário no servidor para evitar fetch em client
   const cookieStore = await cookies();
   const token = cookieStore.get("auth-session")?.value;
+  const sidebarCookie = cookieStore.get("sidebar_state")?.value;
+  const sidebarDefaultOpen =
+    sidebarCookie === "true" ? true : sidebarCookie === "false" ? false : true;
   let role: "USER" | "STAFF" | "COORD" | "CONCELHO" | "ADMIN" = "USER";
   if (token) {
     try {
@@ -28,15 +36,19 @@ export default async function RootLayout({
         where: { token, valid: true, expiresAt: { gt: new Date() } },
         include: { User: true },
       });
-      role = (session?.User as unknown as { role?: typeof role })?.role || "USER";
+      role =
+        (session?.User as unknown as { role?: typeof role })?.role || "USER";
     } catch {}
   }
   return (
     <html lang="pt-BR">
-      <body className={`${inter.className} bg-gray-50`}>
-        <SidebarProvider>
+      <body className={`${inter.className} bg-gray-50 `}>
+        <SidebarProvider defaultOpen={sidebarDefaultOpen}>
           <MaybeSidebar role={role} />
           <SidebarInset>
+            <div className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b bg-background px-4">
+              <SidebarTrigger />
+            </div>
             {children}
           </SidebarInset>
         </SidebarProvider>
