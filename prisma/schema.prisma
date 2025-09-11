@@ -92,7 +92,9 @@ model Sessions {
 // --- Eventos básicos para listagem/CRUD ---
 enum EventStatus {
   ativo
-  inativo
+  cancelado
+  finalizado
+  lotado
 }
 
 model Event {
@@ -103,11 +105,23 @@ model Event {
   category          String?
   location          String?
   organizer_name    String?
+  organizer_contact String?
   image_url         String?
   price             Float       @default(0)
   status            EventStatus @default(ativo)
   event_date_start  DateTime?
+  event_date_end    DateTime?
   event_time_start  String?
+  event_time_end    String?
+  target_audience   String?
+  max_participants  Int?
+  payment_info      String?
+  required_items    String[]
+  instructions      String?
+  cancellation_policy String?
+  transportation    String?
+  meals_included    Boolean?    @default(false)
+  accommodation_included Boolean? @default(false)
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
