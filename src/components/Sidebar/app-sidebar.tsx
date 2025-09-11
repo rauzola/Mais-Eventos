@@ -72,6 +72,8 @@ export function AppSidebar({
     items: [
       { title: "Dashboard Admin", url: "/admin" },
       { title: "Usuários", url: "/admin/usuarios" },
+      { title: "Novo Evento", url: "/admin/eventos/novo" },
+      { title: "Gerenciar Eventos", url: "/admin/eventos" },
     ],
   };
 

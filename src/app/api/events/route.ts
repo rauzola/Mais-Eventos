@@ -77,6 +77,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as Partial<EventCreateInput>;
+
+    const toDateOrNull = (value?: string | Date | null) => {
+      if (!value) return null;
+      if (value instanceof Date) return value;
+      // Espera yyyy-MM-dd ou ISO completo
+      const str = String(value);
+      const iso = /^\d{4}-\d{2}-\d{2}$/.test(str) ? `${str}T00:00:00.000Z` : str;
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
     const data: EventCreateInput = {
       title: body.title ?? "",
       short_description: body.short_description ?? null,
@@ -87,7 +98,7 @@ export async function POST(request: NextRequest) {
       image_url: body.image_url ?? null,
       price: typeof body.price === "number" ? body.price : 0,
       status: body.status ?? "ativo",
-      event_date_start: body.event_date_start ?? null,
+      event_date_start: toDateOrNull(body.event_date_start) ?? null,
       event_time_start: body.event_time_start ?? null,
     };
     const created = await db.event.create({ data });
