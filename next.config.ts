@@ -1,6 +1,17 @@
 import type { NextConfig } from "next/types";
 
 const nextConfig: NextConfig = {
+  // Configuração de imagens para permitir domínios externos
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.prismic.io',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   // Configurações para otimizar performance na Vercel
   ...(process.env.NODE_ENV === "production" && {
     // Otimizações de build para produção
