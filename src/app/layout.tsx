@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { MaybeSidebar } from "@/components/Sidebar/MaybeSidebar";
+import { ConditionalSidebar } from "@/components/Sidebar/ConditionalSidebar";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma-vercel";
 
@@ -43,15 +38,12 @@ export default async function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${inter.className} bg-gray-50 `}>
-        <SidebarProvider defaultOpen={sidebarDefaultOpen}>
-          <MaybeSidebar role={role} />
-          <SidebarInset>
-            <div className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b bg-background px-4">
-              <SidebarTrigger />
-            </div>
-            {children}
-          </SidebarInset>
-        </SidebarProvider>
+        <ConditionalSidebar 
+          role={role} 
+          sidebarDefaultOpen={sidebarDefaultOpen}
+        >
+          {children}
+        </ConditionalSidebar>
       </body>
     </html>
   );
