@@ -22,7 +22,7 @@ export function ConditionalSidebar({
   sidebarDefaultOpen 
 }: ConditionalSidebarProps) {
   const pathname = usePathname();
-  const hideMenuRoutes = ["/login", "/cadastro", "/acampa/campista", "/acampa/servos"];
+  const hideMenuRoutes = ["/login", "/cadastro", "/acampa/acampa-de-novembro", "/acampa/[id]"];
   const shouldShowSidebar = !hideMenuRoutes.includes(pathname);
 
   if (!shouldShowSidebar) {
