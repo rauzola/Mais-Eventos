@@ -186,7 +186,7 @@ function RegisterFormContent({ eventId }: RegisterFormContentProps) {
       showSuccess("Cadastro realizado com sucesso! Redirecionando...");
       
       setTimeout(() => {
-        router.push("/login");
+        router.push("/sucesso");
       }, 1500);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro inesperado. Tente novamente.";

@@ -47,19 +47,10 @@ interface RegisterAcampaResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("=== INÍCIO DO CADASTRO DE ACAMPAMENTO ===");
-    
     const formData = await request.formData();
     const file = formData.get("arquivo") as File | null;
     const jsonData = formData.get("data") as string;
     const data = JSON.parse(jsonData) as RegisterAcampaRequest;
-    
-    console.log("Dados recebidos:", {
-      email: data.email,
-      nomeCompleto: data.nomeCompleto,
-      eventId: data.eventId,
-      arquivo: file ? { name: file.name, size: file.size, type: file.type } : null
-    });
 
     // Verificar se o arquivo foi enviado
     if (!file) {
@@ -181,7 +172,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("Erro no upload:", uploadError);
       return NextResponse.json(
         { error: "Erro ao fazer upload do arquivo: " + uploadError.message },
         { status: 500 }
@@ -192,12 +182,6 @@ export async function POST(request: NextRequest) {
     const { data: publicUrlData } = supabase.storage
       .from("AcampaNovembro")
       .getPublicUrl(filePath);
-
-    console.log("Upload realizado com sucesso:", {
-      filePath,
-      publicUrl: publicUrlData?.publicUrl,
-      filename
-    });
 
     if (!publicUrlData?.publicUrl) {
       return NextResponse.json(
@@ -223,7 +207,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar usuário
-    console.log("Criando usuário...");
     const user = await prisma.user.create({
       data: {
         email: data.email.toLowerCase(),
@@ -250,8 +233,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    console.log("Usuário criado com sucesso:", user.id);
-
     // Verificar se já existe inscrição para este usuário e evento
     const existingInscricao = await prisma.inscricaoEvento.findUnique({
       where: {
@@ -263,7 +244,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingInscricao) {
-      console.log("Inscrição já existe para este usuário e evento:", existingInscricao.id);
       return NextResponse.json<RegisterAcampaResponse>(
         { error: "Usuário já está inscrito neste evento" },
         { status: 400 }
@@ -285,8 +265,6 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    console.log("Criando inscrição com dados:", inscricaoData);
-
     try {
       const inscricao = await prisma.inscricaoEvento.create({
         data: inscricaoData
@@ -300,8 +278,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    console.log("=== CADASTRO CONCLUÍDO COM SUCESSO ===");
     
     return NextResponse.json<RegisterAcampaResponse>({
       success: true,
