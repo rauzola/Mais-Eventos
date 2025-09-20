@@ -22,8 +22,18 @@ export function ConditionalSidebar({
   sidebarDefaultOpen 
 }: ConditionalSidebarProps) {
   const pathname = usePathname();
-  const hideMenuRoutes = ["/login", "/cadastro", "/acampa/acampa-novembro-2025", "/acampa/acampa-novembro-2025-servos", "/acampa/[id]"];
-  const shouldShowSidebar = !hideMenuRoutes.includes(pathname);
+  
+  // Rotas que DEVEM mostrar o sidebar
+  const showSidebarRoutes = [
+    "/dashboard",
+    "/admin",
+    "/eventos"
+  ];
+  
+  // Verificar se deve mostrar o sidebar
+  const shouldShowSidebar = showSidebarRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + "/")
+  );
 
   if (!shouldShowSidebar) {
     // Para rotas sem sidebar, renderiza apenas o conteúdo
