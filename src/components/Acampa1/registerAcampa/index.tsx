@@ -2,7 +2,6 @@
 
 "use client";
 
-import { RegisterResponse } from "@/app/api/register/route";
 import {
   Card,
   CardContent,
@@ -10,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import axios, { AxiosError } from "axios";
 import { Heart, Check, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,6 +19,12 @@ import { TermosCondicoes } from "./TermosCondicoes";
 import { InstrucoesGerais } from "./InstrucoesGerais";
 import { convertDateToHtmlFormat } from "@/lib/masks";
 import { ToastContainer, useToast, ToastProvider } from "@/components/ui/toast";
+
+interface RegisterAcampaResponse {
+  success?: boolean;
+  error?: string;
+  message?: string;
+}
 
 export interface CadastroData {
   // Step 1 - Dados Pessoais
@@ -37,6 +41,7 @@ export interface CadastroData {
   cidade: string;
   senha: string;
   confirmarSenha: string;
+  arquivo: File | null;
   
   // Step 2 - Ficha de Saúde
   portadorDoenca: string;
@@ -50,7 +55,11 @@ export interface CadastroData {
   termo3: boolean;
 }
 
-function RegisterFormContent() {
+interface RegisterFormContentProps {
+  eventId: string;
+}
+
+function RegisterFormContent({ eventId }: RegisterFormContentProps) {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
 
@@ -75,6 +84,7 @@ function RegisterFormContent() {
     cidade: "",
     senha: "",
     confirmarSenha: "",
+    arquivo: null,
     portadorDoenca: "",
     alergiaIntolerancia: "",
     medicacaoUso: "",
@@ -113,10 +123,17 @@ function RegisterFormContent() {
       if (formData.dataNascimento.includes('/')) {
         dataNascimentoFormatada = convertDateToHtmlFormat(formData.dataNascimento);
       }
-      
 
+      // Preparar FormData para envio com arquivo
+      const formDataToSend = new FormData();
       
-      await axios.post<RegisterResponse>("/api/register", {
+      // Adicionar arquivo
+      if (formData.arquivo) {
+        formDataToSend.append("arquivo", formData.arquivo);
+      }
+      
+      // Adicionar dados como JSON
+      const dataToSend = {
         // Campos básicos
         email: formData.email,
         password: formData.senha,
@@ -146,7 +163,23 @@ function RegisterFormContent() {
         termo1: formData.termo1,
         termo2: formData.termo2,
         termo3: formData.termo3,
+        
+        // Evento
+        eventId: eventId,
+      };
+      
+      formDataToSend.append("data", JSON.stringify(dataToSend));
+
+      const response = await fetch("/api/register-acampa", {
+        method: "POST",
+        body: formDataToSend,
       });
+
+      const result = await response.json() as RegisterAcampaResponse;
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro interno do servidor");
+      }
 
       setFormLoading(false);
       setFormSuccess(true);
@@ -156,12 +189,8 @@ function RegisterFormContent() {
         router.push("/login");
       }, 1500);
     } catch (error) {
-      if (error instanceof AxiosError) {
-        const { error: errorMessage } = error.response?.data as RegisterResponse;
-        showError(errorMessage || "Erro interno do servidor. Tente novamente.");
-      } else {
-        showError("Erro inesperado. Tente novamente.");
-      }
+      const errorMessage = error instanceof Error ? error.message : "Erro inesperado. Tente novamente.";
+      showError(errorMessage);
       setFormLoading(false);
       setFormSuccess(false);
     }
@@ -347,10 +376,14 @@ function RegisterFormContent() {
   );
 }
 
-export function RegisterForm() {
+interface RegisterFormProps {
+  eventId: string;
+}
+
+export function RegisterForm({ eventId }: RegisterFormProps) {
   return (
     <ToastProvider>
-      <RegisterFormContent />
+      <RegisterFormContent eventId={eventId} />
     </ToastProvider>
   );
 }

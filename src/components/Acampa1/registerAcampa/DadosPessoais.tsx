@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, ArrowLeft, Eye, EyeOff, Search } from "lucide-react";
+import { ArrowRight, ArrowLeft, Eye, EyeOff, Search, Upload, FileText, Image, X } from "lucide-react";
 import { CadastroData } from "./index";
 import { applyCpfMask, applyPhoneMask, applyDateMask, validatePassword } from "@/lib/masks";
 import { citiesParana } from "@/lib/cities-parana";
@@ -65,6 +65,15 @@ export const DadosPessoais = ({
     isValid: boolean;
     message: string;
   }>({ isValid: true, message: "" });
+  
+  // Estados para upload de arquivo
+  const [arquivoValidation, setArquivoValidation] = useState<{
+    isValid: boolean;
+    message: string;
+  }>({ isValid: true, message: "" });
+  
+  const [arquivoPreview, setArquivoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const emailTimeoutRef = useRef<number | null>(null);
   const cpfTimeoutRef = useRef<number | null>(null);
@@ -188,6 +197,17 @@ export const DadosPessoais = ({
     }
     if (!data.cidade?.trim()) {
       showError("Cidade é obrigatória");
+      return;
+    }
+    
+    // Validação do arquivo
+    if (!data.arquivo) {
+      showError("Upload de arquivo é obrigatório");
+      return;
+    }
+    
+    if (!arquivoValidation.isValid) {
+      showError(arquivoValidation.message);
       return;
     }
     
@@ -397,6 +417,90 @@ export const DadosPessoais = ({
       case 'strong': return 'Forte';
       default: return '';
     }
+  };
+
+  // Função para validar arquivo
+  const validateFile = (file: File) => {
+    // Validar tipo de arquivo
+    if (!(file.type.startsWith("image/") || file.type === "application/pdf")) {
+      setArquivoValidation({
+        isValid: false,
+        message: "Apenas arquivos de imagem ou PDF são permitidos"
+      });
+      return false;
+    }
+
+    // Validar tamanho (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setArquivoValidation({
+        isValid: false,
+        message: "Arquivo deve ser de até 10MB"
+      });
+      return false;
+    }
+
+    setArquivoValidation({
+      isValid: true,
+      message: "Arquivo válido"
+    });
+    return true;
+  };
+
+  // Função para lidar com a seleção de arquivo
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (validateFile(file)) {
+        updateData({ arquivo: file });
+        
+        // Criar preview para imagens
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setArquivoPreview(e.target?.result as string);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          setArquivoPreview(null);
+        }
+      } else {
+        // Limpar arquivo se inválido
+        updateData({ arquivo: null });
+        setArquivoPreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    }
+  };
+
+  // Função para remover arquivo
+  const handleRemoveFile = () => {
+    updateData({ arquivo: null });
+    setArquivoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setArquivoValidation({ isValid: true, message: "" });
+  };
+
+  // Função para obter ícone do arquivo
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith("image/")) {
+      return <Image className="h-8 w-8 text-blue-500" />;
+    } else if (file.type === "application/pdf") {
+      return <FileText className="h-8 w-8 text-red-500" />;
+    }
+    return <FileText className="h-8 w-8 text-gray-500" />;
+  };
+
+  // Função para formatar tamanho do arquivo
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -681,6 +785,81 @@ export const DadosPessoais = ({
               </SelectContent>
             </Select>
           )}
+        </div>
+        
+        <div className="md:col-span-2">
+          <Label htmlFor="arquivo">Documento/Comprovante *</Label>
+          <div className="mt-2">
+            {!data.arquivo ? (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  id="arquivo"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center">
+                  <Upload className="h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-lg font-medium text-gray-700 mb-2">
+                    Clique para fazer upload
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Imagens (JPG, PNG, GIF) ou PDF até 10MB
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="mt-2"
+                  >
+                    Selecionar Arquivo
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="border border-gray-300 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {arquivoPreview ? (
+                      <img
+                        src={arquivoPreview}
+                        alt="Preview do arquivo"
+                        className="h-12 w-12 object-cover rounded"
+                      />
+                    ) : (
+                      getFileIcon(data.arquivo)
+                    )}
+                    <div>
+                      <p className="font-medium text-gray-900">{data.arquivo.name}</p>
+                      <p className="text-sm text-gray-500">{formatFileSize(data.arquivo.size)}</p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveFile}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            {!arquivoValidation.isValid && (
+              <p className="text-red-500 text-sm mt-2">{arquivoValidation.message}</p>
+            )}
+            {arquivoValidation.isValid && data.arquivo && (
+              <p className="text-green-600 text-sm mt-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                {arquivoValidation.message}
+              </p>
+            )}
+          </div>
         </div>
         
         <div className="md:col-span-2">

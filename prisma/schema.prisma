@@ -73,6 +73,7 @@ model User {
   
   // Relações
   Sessions  Sessions[]
+  Inscricoes InscricaoEvento[]
   
   @@map("users")
 }
@@ -125,5 +126,48 @@ model Event {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
+  // Relações
+  inscricoes        InscricaoEvento[]
+
   @@map("events")
+}
+
+// --- Inscrições em Eventos ---
+enum InscricaoStatus {
+  pendente
+  confirmada
+  cancelada
+  rejeitada
+}
+
+model InscricaoEvento {
+  id                String         @id @default(cuid())
+  userId            String
+  eventId           String
+  status            InscricaoStatus @default(pendente)
+  dataInscricao     DateTime       @default(now())
+  dataConfirmacao   DateTime?
+  observacoes       String?
+  comprovantePagamento String?
+  valorPago         Float?
+  formaPagamento    String?
+  
+  // Arquivos enviados
+  arquivoUrl        String?        // URL do arquivo no Supabase Storage
+  nomeArquivo       String?        // Nome original do arquivo
+  tipoArquivo       String?        // Tipo do arquivo (image/jpeg, application/pdf, etc.)
+  tamanhoArquivo    Int?           // Tamanho do arquivo em bytes
+  
+  // Dados específicos do evento (podem variar conforme o tipo)
+  dadosAdicionais   Json?
+  
+  // Relações
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event             Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  @@unique([userId, eventId])
+  @@map("inscricoes_eventos")
 }

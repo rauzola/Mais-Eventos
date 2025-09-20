@@ -17,7 +17,7 @@ export default function Acampa1({ event }: { event: ApiEvent })  {
       <h1>{event.title}</h1>
       <h1>{event.short_description}</h1>
       <h1>{event.description}</h1> */}
-      <RegisterForm />
+      <RegisterForm eventId={event.id} />
       </>
   );
 }
