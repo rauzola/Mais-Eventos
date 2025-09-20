@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma-vercel";
 import { supabase } from "@/lib/supabase";
+import { Resend } from 'resend';
+import React from 'react';
+import acampaCapista from '@/components/Email/acampa-campista';
 // import { cleanupPrisma } from "@/lib/prisma-config";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface RegisterAcampaRequest {
   // Dados básicos
@@ -273,6 +278,65 @@ export async function POST(request: NextRequest) {
       });
 
       console.log("Inscrição criada com sucesso:", inscricao.id);
+
+      // Enviar email de confirmação diretamente
+      try {
+        const emailData = {
+          nomeCompleto: data.nomeCompleto,
+          email: data.email,
+          cpf: data.cpf,
+          dataNascimento: data.dataNascimento,
+          estadoCivil: data.estadoCivil,
+          tamanhoCamiseta: data.tamanhoCamiseta,
+          profissao: data.profissao,
+          telefone: data.telefone,
+          contatoEmergencia: data.contatoEmergencia,
+          telefoneEmergencia: data.telefoneEmergencia,
+          cidade: data.cidade,
+          portadorDoenca: data.portadorDoenca,
+          alergiaIntolerancia: data.alergiaIntolerancia,
+          medicacaoUso: data.medicacaoUso,
+          restricaoAlimentar: data.restricaoAlimentar,
+          numeroPlano: data.numeroPlano,
+          operadora: data.operadora,
+          termo1: data.termo1,
+          termo2: data.termo2,
+          termo3: data.termo3,
+          frente: data.frente,
+          arquivoUrl: publicUrlData.publicUrl,
+          eventTitle: event.title,
+          eventDateStart: event.event_date_start ? new Date(event.event_date_start).toLocaleDateString('pt-BR') : undefined,
+          eventDateEnd: event.event_date_end ? new Date(event.event_date_end).toLocaleDateString('pt-BR') : undefined
+        };
+
+        // Limpar o título do evento para o assunto do email
+        const cleanEventTitle = (event.title || 'Acampamento')
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/\t/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        const subject = `Bem-vindo(a) ao ${cleanEventTitle}! ⛪`;
+
+        const { error: emailError } = await resend.emails.send({
+          from: `${process.env.EMAIL_FROM}`,
+          to: [data.email],
+          subject,
+          react: React.createElement(acampaCapista, emailData),
+        });
+
+        if (emailError) {
+          console.error("Erro ao enviar email:", emailError);
+          // Não falhar o cadastro se o email não for enviado
+        } else {
+          console.log("Email enviado com sucesso para:", data.email);
+        }
+      } catch (emailError) {
+        console.error("Erro ao enviar email:", emailError);
+        // Não falhar o cadastro se o email não for enviado
+      }
+
     } catch (inscricaoError) {
       console.error("Erro ao criar inscrição:", inscricaoError);
       return NextResponse.json<RegisterAcampaResponse>(

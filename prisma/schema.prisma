@@ -173,6 +173,7 @@ model InscricaoEvento {
   comprovantePagamento String?
   valorPago         Float?
   formaPagamento    String?
+  ativo             Boolean        @default(true)
   
   // Frente de trabalho
   frente            FrenteType     @default(campista)
