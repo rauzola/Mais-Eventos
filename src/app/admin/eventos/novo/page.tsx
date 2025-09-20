@@ -2,9 +2,11 @@ import Link from "next/link";
 import { EventForm } from "@/app/admin/eventos/EventForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Plus } from "lucide-react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function NovoEventoPage() {
   return (
+    <ProtectedRoute allowedRoles={['ADMIN']}>
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/50">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg">
@@ -48,6 +50,7 @@ export default function NovoEventoPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
 

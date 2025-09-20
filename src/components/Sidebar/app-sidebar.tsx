@@ -26,9 +26,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Navegação principal (flat) semelhante ao exemplo enviado
 const navigationFlat = [
-  { title: "Início", url: "/dashboard", icon: Home },
-  { title: "Eventos", url: "/eventos", icon: Calendar },
-  { title: "Minhas Inscrições", url: "/inscricoes", icon: Users },
+  { title: "Início", url: "/dashboard", icon: Home }
+  // { title: "Eventos", url: "/eventos", icon: Calendar },
+  // { title: "Minhas Inscrições", url: "/inscricoes", icon: Users },
 ];
 
 type AppRole = "USER" | "STAFF" | "COORD" | "CONCELHO" | "ADMIN";

@@ -1,4 +1,5 @@
 import { EventForm, type EventFormValues } from "@/app/admin/eventos/EventForm";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 type ApiEvent = {
   title: string;
@@ -42,10 +43,12 @@ export default async function EditEventoPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const initial = await getEvent(id);
   return (
+    <ProtectedRoute allowedRoles={['ADMIN']}>
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4">Editar Evento</h1>
       <EventForm mode="edit" eventId={id} initialValues={initial ?? undefined} />
     </div>
+    </ProtectedRoute>
   );
 }
 
