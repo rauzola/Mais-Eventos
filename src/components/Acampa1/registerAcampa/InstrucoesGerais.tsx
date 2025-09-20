@@ -20,54 +20,91 @@ import {
 
 interface InstrucoesGeraisProps {
   onNext: () => void;
+  event?: {
+    id: string;
+    title: string;
+    short_description?: string | null;
+    description?: string | null;
+    category?: string | null;
+    location?: string | null;
+    organizer_name?: string | null;
+    organizer_contact?: string | null;
+    image_url?: string | null;
+    price: number;
+    status: "ativo" | "inativo";
+    event_date_start?: string | null;
+    event_time_start?: string | null;
+    target_audience?: string | null;
+    event_date_end?: string | null;
+    event_time_end?: string | null;
+    instructions?: string | null;
+    required_items?: string[] | null;
+    payment_info?: string | null;
+    cancellation_policy?: string | null;
+    max_participants?: number | null;
+    transportation?: string | null;
+    meals_included?: boolean | null;
+    accommodation_included?: boolean | null;
+    confirmation_text?: string | null;
+  };
 }
 
-export function InstrucoesGerais({ onNext }: InstrucoesGeraisProps) {
+export function InstrucoesGerais({ onNext, event }: InstrucoesGeraisProps) {
+  console.log("InstrucoesGerais - event recebido:", event);
+  console.log("InstrucoesGerais - confirmation_text:", event?.confirmation_text);
+  
   return (
     <Card className="border-2 border-blue-200 shadow-lg">
       <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-t-lg py-6">
         <CardTitle className="text-3xl font-bold">
-          Acampamento de Novembro 2025 - Campistas
+          {event?.title || "Acampamento de Novembro 2025"}
         </CardTitle>
         <CardDescription className="text-blue-100 text-lg mt-2">
-          Projeto Mais Vida - Igreja Católica de Maringá
+          {event?.organizer_name || "Projeto Mais Vida - Igreja Católica de Maringá"}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="p-6">
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-center text-blue-800 mb-6">
-            Formulário Campistas
+            Formulário de Inscrição
           </h2>
 
-          <div className="prose max-w-none">
-            <p className="text-gray-700 text-lg">
-              Seja bem-vindo! Você está sendo convidado(a) a
-              participar do Acampamento de Novembro de 2025,
-              uma das atividades da Igreja Católica de Maringá,
-              organizado e promovido pelo Projeto Mais Vida.
-            </p>
+          
 
-            <p className="text-gray-700 mt-4">
-              Temos como carisma promover um encontro profundo
-              com Deus, consigo mesmo e com o outro. Este
-              trabalho é baseado no processo de relação de ajuda
-              e tem como objetivo o autoconhecimento e a
-              formação humana e espiritual. Durante o
-              acampamento você poderá participar de atividades
-              físicas e dinâmicas em grupo. O transporte para o
-              local do Acampa, será realizado por ônibus
-              contratado pelo Projeto Mais Vida.
-            </p>
+          <div className="prose max-w-none">
+            {event?.short_description && (
+              <p className="text-gray-700 text-lg">
+                {event.short_description}
+              </p>
+            )}
+
+            {event?.description && (
+              <p className="text-gray-700 mt-4">
+                {event.description}
+              </p>
+            )}
           </div>
         </div>
 
         <Separator className="my-6" />
 
+        {/* Instruções específicas do evento */}
+        {event?.instructions && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <h4 className="font-bold text-yellow-800 mb-2">
+              INSTRUÇÕES ESPECÍFICAS DO EVENTO:
+            </h4>
+            <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: event.instructions }} />
+          </div>
+        )}
+
         <div className="mb-8">
           <h3 className="text-xl font-bold text-blue-800 mb-4">
             INSTRUÇÕES GERAIS:
           </h3>
+
+          
 
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -76,18 +113,28 @@ export function InstrucoesGerais({ onNext }: InstrucoesGeraisProps) {
                   <span className="font-bold">1</span>
                 </div>
                 <span className="text-gray-700">
-                  <strong>Data de início:</strong> 20 de novembro
-                  de 2025 (quinta-feira)
+                  <strong>Data de início:</strong> {event?.event_date_start ? new Date(event.event_date_start).toLocaleDateString('pt-BR', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) : "20 de novembro de 2025 (quinta-feira)"}
                 </span>
               </div>
+
+             
 
               <div className="flex items-center space-x-2">
                 <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
                   <span className="font-bold">2</span>
                 </div>
                 <span className="text-gray-700">
-                  <strong>Data de retorno:</strong> 23 de novembro
-                  de 2025 (domingo)
+                  <strong>Data de retorno:</strong> {event?.event_date_end ? new Date(event.event_date_end).toLocaleDateString('pt-BR', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) : "23 de novembrsssssso de 2025 (domingo)"}
                 </span>
               </div>
             </div>
@@ -98,51 +145,70 @@ export function InstrucoesGerais({ onNext }: InstrucoesGeraisProps) {
           </h4>
           <div className="border border-blue-200 rounded-md p-4 bg-white shadow-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {[
-                { icon: Book, text: "Bíblia Sagrada" },
-                { icon: Flashlight, text: "Lanterna" },
-                { icon: Bug, text: "Repelente" },
-                { icon: Sun, text: "Protetor solar" },
-                {
-                  icon: Brush,
-                  text: "Materiais de higiene pessoal",
-                },
-                { icon: Bed, text: "Colchão" },
-                { icon: Bed, text: "Roupa de cama" },
-                { icon: Bed, text: "Travesseiro" },
-                { icon: Bed, text: "Cobertor" },
-                { icon: CloudRain, text: "Capa de chuva" },
-                { icon: Droplet, text: "Garrafinha d´agua" },
-                { icon: Sun, text: "Boné" },
-                { icon: Trash2, text: "Sacos plásticos" },
-                {
-                  icon: Shirt,
-                  text: "Sapatos confortáveis e fechados (tênis, bota, botina, galocha...)",
-                },
-                { icon: Thermometer, text: "Roupas de frio" },
-                { icon: Shirt, text: "Roupas discretas" },
-                {
-                  icon: Sword,
-                  text: "Roupas de guerra (para usar sem dó)",
-                },
-                {
-                  icon: Headphones,
-                  text: "Protetor auricular (À venda em lojas de EPIs)",
-                },
-              ].map(({ icon: Icon, text }, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors"
-                >
-                  <Icon
-                    className="text-blue-500 flex-shrink-0"
-                    size={24}
-                  />
-                  <span className="text-gray-700 text-sm leading-tight">
-                    {text}
-                  </span>
-                </div>
-              ))}
+              {/* Itens específicos do evento se disponível */}
+              {event?.required_items && event.required_items.length > 0 ? (
+                event.required_items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    <Book
+                      className="text-blue-500 flex-shrink-0"
+                      size={24}
+                    />
+                    <span className="text-gray-700 text-sm leading-tight">
+                      {item}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                // Itens padrão se não houver itens específicos do evento
+                [
+                  { icon: Book, text: "Bíblia Sagrada" },
+                  { icon: Flashlight, text: "Lanterna" },
+                  { icon: Bug, text: "Repelente" },
+                  { icon: Sun, text: "Protetor solar" },
+                  {
+                    icon: Brush,
+                    text: "Materiais de higiene pessoal",
+                  },
+                  { icon: Bed, text: "Colchão" },
+                  { icon: Bed, text: "Roupa de cama" },
+                  { icon: Bed, text: "Travesseiro" },
+                  { icon: Bed, text: "Cobertor" },
+                  { icon: CloudRain, text: "Capa de chuva" },
+                  { icon: Droplet, text: "Garrafinha d´agua" },
+                  { icon: Sun, text: "Boné" },
+                  { icon: Trash2, text: "Sacos plásticos" },
+                  {
+                    icon: Shirt,
+                    text: "Sapatos confortáveis e fechados (tênis, bota, botina, galocha...)",
+                  },
+                  { icon: Thermometer, text: "Roupas de frio" },
+                  { icon: Shirt, text: "Roupas discretas" },
+                  {
+                    icon: Sword,
+                    text: "Roupas de guerra (para usar sem dó)",
+                  },
+                  {
+                    icon: Headphones,
+                    text: "Protetor auricular (À venda em lojas de EPIs)",
+                  },
+                ].map(({ icon: Icon, text }, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    <Icon
+                      className="text-blue-500 flex-shrink-0"
+                      size={24}
+                    />
+                    <span className="text-gray-700 text-sm leading-tight">
+                      {text}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -153,14 +219,14 @@ export function InstrucoesGerais({ onNext }: InstrucoesGeraisProps) {
           </h4>
           <ul className="list-disc list-inside space-y-2 text-gray-700">
             <li>
-              <strong>Valor da inscrição:</strong> R$ 350,00
-              (Trezentos e cinquenta reais)
+              <strong>Valor da inscrição:</strong> R$ {event?.price ? event.price.toFixed(2).replace('.', ',') : '350,00'}
+              {event?.price ? ` (${event.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})` : ' (Trezentos e cinquenta reais)'}
             </li>
-            <li>
-              A inscrição será confirmada mediante o envio da
-              ficha preenchida e assinada, juntamente com o
-              comprovante de pagamento.
-            </li>
+            {event?.confirmation_text && (
+              <li>
+                {event.confirmation_text}
+              </li>
+            )}
             <li>
               <strong>
                 Direito de Arrependimento (Até 7 dias):
@@ -188,38 +254,47 @@ export function InstrucoesGerais({ onNext }: InstrucoesGeraisProps) {
           <h4 className="font-bold text-green-800 mb-2">
             DADOS BANCÁRIOS:
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-            <div>
-              <p>
-                <strong>Chave de Pix:</strong> CNPJ
-                04.585.680/0001-03
-              </p>
-              <p>
-                <strong>Nome:</strong> Projeto Mais Vida
-              </p>
-              <p>
-                <strong>CNPJ:</strong> 04.585.680/0001-03
-              </p>
+          
+          {/* Informações de pagamento do evento se disponível */}
+          {event?.payment_info ? (
+            <div className="text-gray-700 mb-4">
+              <div dangerouslySetInnerHTML={{ __html: event.payment_info }} />
             </div>
-            <div>
-              <p>
-                <strong>Banco:</strong> CEF (Caixa Econômica
-                Federal)
-              </p>
-              <p>
-                <strong>Operação:</strong> 003
-              </p>
-              <p>
-                <strong>Agência:</strong> 0395
-              </p>
-              <p>
-                <strong>Conta Jurídica:</strong> 4839-2
-              </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+              <div>
+                <p>
+                  <strong>Chave de Pix:</strong> CNPJ
+                  04.585.680/0001-03
+                </p>
+                <p>
+                  <strong>Nome:</strong> {event?.organizer_name || "Projeto Mais Vida"}
+                </p>
+                <p>
+                  <strong>CNPJ:</strong> 04.585.680/0001-03
+                </p>
+              </div>
+              <div>
+                <p>
+                  <strong>Banco:</strong> CEF (Caixa Econômica
+                  Federal)
+                </p>
+                <p>
+                  <strong>Operação:</strong> 003
+                </p>
+                <p>
+                  <strong>Agência:</strong> 0395
+                </p>
+                <p>
+                  <strong>Conta Jurídica:</strong> 4839-2
+                </p>
+              </div>
             </div>
-          </div>
+          )}
+          
           <p className="mt-2 text-gray-700">
             <strong>Parcelamento:</strong> Entre em contato pelo
-            WhatsApp: 44 99137-2331
+            WhatsApp: {event?.organizer_contact || "44 99137-2331"}
           </p>
         </div>
 

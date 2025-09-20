@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Users, Settings, Info, CheckCircle, AlertCircle, Save } from "lucide-react";
+import { Info, CheckCircle, AlertCircle, Save } from "lucide-react";
 
 type EventStatus = "ativo" | "cancelado" | "finalizado" | "lotado" | "inativo";
 
@@ -35,6 +35,7 @@ export type EventFormValues = {
   transportation?: string | null;
   meals_included?: boolean | null;
   accommodation_included?: boolean | null;
+  confirmation_text?: string | null;
 };
 
 export function EventForm({
@@ -74,6 +75,7 @@ export function EventForm({
     transportation: initialValues?.transportation ?? "",
     meals_included: initialValues?.meals_included ?? false,
     accommodation_included: initialValues?.accommodation_included ?? false,
+    confirmation_text: initialValues?.confirmation_text ?? "",
   });
 
   const [loading, setLoading] = React.useState(false);
@@ -123,7 +125,11 @@ export function EventForm({
         transportation: values.transportation || null,
         meals_included: Boolean(values.meals_included),
         accommodation_included: Boolean(values.accommodation_included),
+        confirmation_text: values.confirmation_text || null,
       };
+
+      console.log("Payload sendo enviado:", payload);
+      console.log("confirmation_text:", payload.confirmation_text);
 
       const endpoint = mode === "create" ? "/api/events" : `/api/events/${eventId}`;
       const method = mode === "create" ? "POST" : "PUT";
@@ -171,31 +177,116 @@ export function EventForm({
         </div>
       )}
 
-      {/* Informações Básicas */}
+      {/* Formulário Linear */}
       <Card className="bg-white/80 backdrop-blur-sm border border-white/40">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Info className="w-5 h-5 text-blue-600" />
-            Informações Básicas
+            Informações do Evento
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium">Título do Evento</label>
-              <Input value={values.title} onChange={(e) => handleChange("title", e.target.value)} placeholder="Ex: Retiro de Jovens - Mais Vida" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Descrição Resumida</label>
-              <Input value={values.short_description ?? ""} onChange={(e) => handleChange("short_description", e.target.value)} placeholder="Uma breve descrição do evento" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Descrição Completa</label>
-              <Textarea rows={4} value={values.description ?? ""} onChange={(e) => handleChange("description", e.target.value)} placeholder="Descreva detalhadamente o evento..." />
-            </div>
+        <CardContent className="space-y-6">
+          {/* 1. Título */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Título do Evento *</label>
+            <Input 
+              value={values.title} 
+              onChange={(e) => handleChange("title", e.target.value)} 
+              placeholder="Ex: Acampamento de Novembro 2025 - Campistas" 
+              required 
+              className="w-full"
+            />
+          </div>
+
+          {/* 2. Breve Descrição */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Breve Descrição</label>
+            <Input 
+              value={values.short_description ?? ""} 
+              onChange={(e) => handleChange("short_description", e.target.value)} 
+              placeholder="Uma breve descrição do evento" 
+              className="w-full"
+            />
+          </div>
+
+          {/* 3. Descrição */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Descrição Completa</label>
+            <Textarea 
+              rows={4} 
+              value={values.description ?? ""} 
+              onChange={(e) => handleChange("description", e.target.value)} 
+              placeholder="Descreva detalhadamente o evento..." 
+              className="w-full"
+            />
+          </div>
+
+          {/* 4. Data de Início */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Data de Início</label>
+            <Input 
+              type="date" 
+              value={values.event_date_start ?? ""} 
+              onChange={(e) => handleChange("event_date_start", e.target.value)} 
+              className="w-full"
+            />
+          </div>
+
+          {/* 5. Data de Retorno */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Data de Retorno</label>
+            <Input 
+              type="date" 
+              value={values.event_date_end ?? ""} 
+              onChange={(e) => handleChange("event_date_end", e.target.value)} 
+              className="w-full"
+            />
+          </div>
+
+          {/* 6. Valor da Inscrição */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Valor da Inscrição (R$)</label>
+            <Input 
+              type="number" 
+              min="0" 
+              step="0.01" 
+              value={values.price === null || values.price === undefined ? "" : String(values.price)} 
+              onChange={(e) => handleNumberChange("price", e.target.value)} 
+              placeholder="350.00" 
+              className="w-full"
+            />
+          </div>
+
+          {/* 7. Texto para Confirmar Inscrição */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Texto para Confirmar Inscrição</label>
+            <Textarea 
+              rows={4} 
+              value={values.confirmation_text ?? ""} 
+              onChange={(e) => handleChange("confirmation_text", e.target.value)} 
+              placeholder="Texto que será exibido após a confirmação da inscrição..." 
+              className="w-full"
+            />
+          </div>
+
+          {/* 8. URL da Imagem */}
+          <div>
+            <label className="block text-sm font-medium mb-2">URL da Imagem</label>
+            <Input 
+              value={values.image_url ?? ""} 
+              onChange={(e) => handleChange("image_url", e.target.value)} 
+              placeholder="https://exemplo.com/imagem.jpg" 
+              className="w-full"
+            />
+          </div>
+
+          {/* Campos Adicionais (Opcionais) */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700">Informações Adicionais (Opcionais)</h3>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium">Categoria</label>
+                <label className="block text-sm font-medium mb-2">Categoria</label>
                 <Select value={values.category || ""} onValueChange={(v) => handleChange("category", v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a categoria" />
@@ -213,7 +304,7 @@ export function EventForm({
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium">Público Alvo</label>
+                <label className="block text-sm font-medium mb-2">Público Alvo</label>
                 <Select value={values.target_audience || ""} onValueChange={(v) => handleChange("target_audience", v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o público" />
@@ -230,147 +321,80 @@ export function EventForm({
                 </Select>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium">URL da Imagem</label>
-              <Input value={values.image_url ?? ""} onChange={(e) => handleChange("image_url", e.target.value)} placeholder="https://exemplo.com/imagem.jpg" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Data e Horário */}
-      <Card className="bg-white/80 backdrop-blur-sm border border-white/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            Data e Horário
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium">Data de Início</label>
-              <Input type="date" value={values.event_date_start ?? ""} onChange={(e) => handleChange("event_date_start", e.target.value)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Local do Evento</label>
+                <Input value={values.location ?? ""} onChange={(e) => handleChange("location", e.target.value)} placeholder="Ex: Casa de Retiros São José, Maringá" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Nome do Organizador</label>
+                <Input value={values.organizer_name ?? ""} onChange={(e) => handleChange("organizer_name", e.target.value)} placeholder="Ex: Pastoral da Juventude" />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium">Horário de Início</label>
-              <Input type="time" value={values.event_time_start ?? ""} onChange={(e) => handleChange("event_time_start", e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Data de Término</label>
-              <Input type="date" value={values.event_date_end ?? ""} onChange={(e) => handleChange("event_date_end", e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Horário de Término</label>
-              <Input type="time" value={values.event_time_end ?? ""} onChange={(e) => handleChange("event_time_end", e.target.value)} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Local e Organização */}
-      <Card className="bg-white/80 backdrop-blur-sm border border-white/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            Local e Organização
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium">Local do Evento</label>
-              <Input value={values.location ?? ""} onChange={(e) => handleChange("location", e.target.value)} placeholder="Ex: Casa de Retiros São José, Maringá" />
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Contato do Organizador</label>
+              <Input value={values.organizer_contact ?? ""} onChange={(e) => handleChange("organizer_contact", e.target.value)} placeholder="Ex: (44) 99999-9999 ou email@exemplo.com" />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Nome do Organizador</label>
-              <Input value={values.organizer_name ?? ""} onChange={(e) => handleChange("organizer_name", e.target.value)} placeholder="Ex: Pastoral da Juventude" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Contato do Organizador</label>
-            <Input value={values.organizer_contact ?? ""} onChange={(e) => handleChange("organizer_contact", e.target.value)} placeholder="Ex: (44) 99999-9999 ou email@exemplo.com" />
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Participantes e Valores */}
-      <Card className="bg-white/80 backdrop-blur-sm border border-white/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Users className="w-5 h-5 text-blue-600" />
-            Participantes e Valores
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium">Máximo de Participantes</label>
-              <Input type="number" min="1" value={values.max_participants === null || values.max_participants === undefined ? "" : String(values.max_participants)} onChange={(e) => handleNumberChange("max_participants", e.target.value)} placeholder="Ex: 50" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Máximo de Participantes</label>
+                <Input type="number" min="1" value={values.max_participants === null || values.max_participants === undefined ? "" : String(values.max_participants)} onChange={(e) => handleNumberChange("max_participants", e.target.value)} placeholder="Ex: 50" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Status do Evento</label>
+                <Select value={values.status} onValueChange={(v) => handleChange("status", v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">✅ Ativo</SelectItem>
+                    <SelectItem value="inativo">⏸️ Inativo</SelectItem>
+                    <SelectItem value="lotado">🎯 Lotado</SelectItem>
+                    <SelectItem value="cancelado">❌ Cancelado</SelectItem>
+                    <SelectItem value="finalizado">✔️ Finalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium">Preço (R$)</label>
-              <Input type="number" min="0" step="0.01" value={values.price === null || values.price === undefined ? "" : String(values.price)} onChange={(e) => handleNumberChange("price", e.target.value)} placeholder="0.00" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Status do Evento</label>
-              <Select value={values.status} onValueChange={(v) => handleChange("status", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ativo">✅ Ativo</SelectItem>
-                  <SelectItem value="inativo">⏸️ Inativo</SelectItem>
-                  <SelectItem value="lotado">🎯 Lotado</SelectItem>
-                  <SelectItem value="cancelado">❌ Cancelado</SelectItem>
-                  <SelectItem value="finalizado">✔️ Finalizado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Informações de Pagamento</label>
-            <Textarea rows={3} value={values.payment_info ?? ""} onChange={(e) => handleChange("payment_info", e.target.value)} placeholder="Como realizar o pagamento, dados bancários, etc..." />
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Detalhes Adicionais */}
-      <Card className="bg-white/80 backdrop-blur-sm border border-white/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Settings className="w-5 h-5 text-blue-600" />
-            Detalhes Adicionais
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium">Instruções Gerais</label>
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Informações de Pagamento</label>
+              <Textarea rows={3} value={values.payment_info ?? ""} onChange={(e) => handleChange("payment_info", e.target.value)} placeholder="Como realizar o pagamento, dados bancários, etc..." />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Instruções Gerais</label>
               <Textarea rows={4} value={values.instructions ?? ""} onChange={(e) => handleChange("instructions", e.target.value)} placeholder="Orientações importantes para os participantes..." />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Política de Cancelamento</label>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Política de Cancelamento</label>
               <Textarea rows={4} value={values.cancellation_policy ?? ""} onChange={(e) => handleChange("cancellation_policy", e.target.value)} placeholder="Condições para cancelamento e reembolso..." />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Itens obrigatórios (um por linha)</label>
-            <Textarea rows={4} value={(values.required_items ?? []).join("\n")} onChange={(e) => setValues((prev) => ({ ...prev, required_items: e.target.value.split("\n").map(s => s).filter(Boolean) }))} placeholder="Digite um item por linha" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Informações sobre Transporte</label>
-            <Textarea rows={3} value={values.transportation ?? ""} onChange={(e) => handleChange("transportation", e.target.value)} placeholder="Como chegar ao local, transporte disponível, etc..." />
-          </div>
-          <div className="flex items-center gap-6 pt-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={Boolean(values.meals_included)} onChange={(e) => handleBoolChange("meals_included", e.target.checked)} />
-              🍽️ Alimentação inclusa
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={Boolean(values.accommodation_included)} onChange={(e) => handleBoolChange("accommodation_included", e.target.checked)} />
-              🏠 Acomodação inclusa
-            </label>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Itens obrigatórios (um por linha)</label>
+              <Textarea rows={4} value={(values.required_items ?? []).join("\n")} onChange={(e) => setValues((prev) => ({ ...prev, required_items: e.target.value.split("\n").map(s => s).filter(Boolean) }))} placeholder="Digite um item por linha" />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Informações sobre Transporte</label>
+              <Textarea rows={3} value={values.transportation ?? ""} onChange={(e) => handleChange("transportation", e.target.value)} placeholder="Como chegar ao local, transporte disponível, etc..." />
+            </div>
+
+            <div className="flex items-center gap-6 mt-4 pt-4 border-t">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={Boolean(values.meals_included)} onChange={(e) => handleBoolChange("meals_included", e.target.checked)} />
+                🍽️ Alimentação inclusa
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={Boolean(values.accommodation_included)} onChange={(e) => handleBoolChange("accommodation_included", e.target.checked)} />
+                🏠 Acomodação inclusa
+              </label>
+            </div>
           </div>
         </CardContent>
       </Card>

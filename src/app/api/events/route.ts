@@ -33,6 +33,7 @@ type EventCreateInput = {
   status?: EventStatus;
   event_date_start?: Date | string | null;
   event_time_start?: string | null;
+  confirmation_text?: string | null;
 };
 
 type EventsFindManyArgs = {
@@ -77,6 +78,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as Partial<EventCreateInput>;
+    console.log("API recebeu body:", body);
+    console.log("confirmation_text recebido:", body.confirmation_text);
 
     const toDateOrNull = (value?: string | Date | null) => {
       if (!value) return null;
@@ -100,8 +103,11 @@ export async function POST(request: NextRequest) {
       status: body.status ?? "ativo",
       event_date_start: toDateOrNull(body.event_date_start) ?? null,
       event_time_start: body.event_time_start ?? null,
+      confirmation_text: body.confirmation_text ?? null,
     };
+    console.log("Dados sendo enviados para Prisma:", data);
     const created = await db.event.create({ data });
+    console.log("Evento criado:", created);
     return NextResponse.json({ event: created }, { status: 201 });
   } catch (error) {
     console.error("POST /api/events erro:", error);

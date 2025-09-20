@@ -16,6 +16,7 @@ type EventRecord = {
   status: EventStatus;
   event_date_start?: Date | null;
   event_time_start?: string | null;
+  confirmation_text?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

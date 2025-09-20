@@ -57,9 +57,36 @@ export interface CadastroData {
 
 interface RegisterFormContentProps {
   eventId: string;
+  event?: {
+    id: string;
+    title: string;
+    short_description?: string | null;
+    description?: string | null;
+    category?: string | null;
+    location?: string | null;
+    organizer_name?: string | null;
+    organizer_contact?: string | null;
+    image_url?: string | null;
+    price: number;
+    status: "ativo" | "inativo";
+    event_date_start?: string | null;
+    event_time_start?: string | null;
+    target_audience?: string | null;
+    event_date_end?: string | null;
+    event_time_end?: string | null;
+    instructions?: string | null;
+    required_items?: string[] | null;
+    payment_info?: string | null;
+    cancellation_policy?: string | null;
+    max_participants?: number | null;
+    transportation?: string | null;
+    meals_included?: boolean | null;
+    accommodation_included?: boolean | null;
+    confirmation_text?: string | null;
+  };
 }
 
-function RegisterFormContent({ eventId }: RegisterFormContentProps) {
+function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
 
@@ -202,6 +229,7 @@ function RegisterFormContent({ eventId }: RegisterFormContentProps) {
         return (
           <InstrucoesGerais
             onNext={handleNext}
+            event={event}
           />
         );
       case 1:
@@ -256,6 +284,7 @@ function RegisterFormContent({ eventId }: RegisterFormContentProps) {
             <h1 className="text-2xl font-bold text-blue-600">Projeto Mais Vida</h1>
           </div>
           <p className="text-gray-600">
+            {eventId}
             Junte-se a nós em uma jornada de saúde e bem-estar
           </p>
         </div>
@@ -378,12 +407,39 @@ function RegisterFormContent({ eventId }: RegisterFormContentProps) {
 
 interface RegisterFormProps {
   eventId: string;
+  event?: {
+    id: string;
+    title: string;
+    short_description?: string | null;
+    description?: string | null;
+    category?: string | null;
+    location?: string | null;
+    organizer_name?: string | null;
+    organizer_contact?: string | null;
+    image_url?: string | null;
+    price: number;
+    status: "ativo" | "inativo";
+    event_date_start?: string | null;
+    event_time_start?: string | null;
+    target_audience?: string | null;
+    event_date_end?: string | null;
+    event_time_end?: string | null;
+    instructions?: string | null;
+    required_items?: string[] | null;
+    payment_info?: string | null;
+    cancellation_policy?: string | null;
+    max_participants?: number | null;
+    transportation?: string | null;
+    meals_included?: boolean | null;
+    accommodation_included?: boolean | null;
+    confirmation_text?: string | null;
+  };
 }
 
-export function RegisterForm({ eventId }: RegisterFormProps) {
+export function RegisterForm({ eventId, event }: RegisterFormProps) {
   return (
     <ToastProvider>
-      <RegisterFormContent eventId={eventId} />
+      <RegisterFormContent eventId={eventId} event={event} />
     </ToastProvider>
   );
 }

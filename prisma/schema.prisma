@@ -123,6 +123,7 @@ model Event {
   transportation    String?
   meals_included    Boolean?    @default(false)
   accommodation_included Boolean? @default(false)
+  confirmation_text String?     // Texto para confirmar inscrição
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
