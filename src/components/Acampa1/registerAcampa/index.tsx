@@ -292,8 +292,8 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
          
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8 animate-in fade-in duration-500">
+        {/* Progress Bar - Desktop */}
+        <div className="hidden md:block mb-8 animate-in fade-in duration-500">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
@@ -344,6 +344,51 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
                 Termos e Condições
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* Progress Bar - Mobile */}
+        <div className="md:hidden mb-6 animate-in fade-in duration-500">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="flex flex-col space-y-4">
+              {[
+                { step: 0, name: "Instruções" },
+                { step: 1, name: "Dados Pessoais" },
+                { step: 2, name: "Ficha de Saúde" },
+                { step: 3, name: "Termos e Condições" }
+              ].map(({ step, name }, index) => (
+                <div key={step} className="flex items-center space-x-3">
+                  {/* Step Number */}
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 ${
+                    step <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>
+                    {step < currentStep ? <Check className="h-4 w-4" /> : step + 1}
+                  </div>
+                  
+                  {/* Step Name */}
+                  <span className={`text-sm font-medium transition-colors duration-300 ${
+                    step <= currentStep ? 'text-blue-600' : 'text-gray-500'
+                  }`}>
+                    {name}
+                  </span>
+                  
+                  {/* Current Step Indicator */}
+                  {step === currentStep && (
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-blue-600 font-medium">Atual</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Step Counter */}
+          <div className="flex justify-center mt-4 pt-3 border-t border-gray-200">
+            <span className="text-xs text-gray-500">
+              Passo {currentStep + 1} de 4
+            </span>
           </div>
         </div>
 
