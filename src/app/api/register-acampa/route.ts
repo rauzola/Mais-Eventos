@@ -256,12 +256,68 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Função para mapear frente para valores válidos do enum
+    const mapFrenteToEnum = (frente: string): "anjonoturno" | "animacao" | "assessores" | "campista" | "coordenacao" | "cozinha" | "estrutura" | "externa" | "intercessao" | "musicaEanimacao" | "primeiros_socorros" => {
+      const normalizedFrente = frente.toLowerCase().replace(/\s+/g, "");
+      
+      // Mapear variações comuns para os valores corretos do enum
+      const frenteMap: Record<string, "anjonoturno" | "animacao" | "assessores" | "campista" | "coordenacao" | "cozinha" | "estrutura" | "externa" | "intercessao" | "musicaEanimacao" | "primeiros_socorros"> = {
+        // Valores exatos do enum
+        "anjonoturno": "anjonoturno",
+        "animacao": "animacao",
+        "assessores": "assessores",
+        "campista": "campista",
+        "coordenacao": "coordenacao",
+        "cozinha": "cozinha",
+        "estrutura": "estrutura",
+        "externa": "externa",
+        "intercessao": "intercessao",
+        "musicaeanimacao": "musicaEanimacao",
+        "primeiros_socorros": "primeiros_socorros",
+        
+        // Variações comuns que podem vir do frontend
+        "anjo_noturno": "anjonoturno",
+        "anjo noturno": "anjonoturno",
+        
+        "animação": "animacao",
+        
+        "assessor": "assessores",
+        
+        "campistas": "campista",
+        
+        "coordenação": "coordenacao",
+        "coordenador": "coordenacao",
+        
+        "cozinheiro": "cozinha",
+        "cozinheiros": "cozinha",
+        
+        "estrutural": "estrutura",
+        
+        "externo": "externa",
+        
+        "intercessão": "intercessao",
+        "intercessor": "intercessao",
+        
+        "musicaanimacao": "musicaEanimacao",
+        "musica_e_animacao": "musicaEanimacao",
+        "música_e_animação": "musicaEanimacao",
+        "música e animação": "musicaEanimacao",
+        "musica e animacao": "musicaEanimacao",
+        
+        "primeirossocorros": "primeiros_socorros",
+        "primeiros socorros": "primeiros_socorros",
+        "socorrista": "primeiros_socorros"
+      };
+      
+      return frenteMap[normalizedFrente] || "campista";
+    };
+
     // Criar inscrição no evento
     const inscricaoData = {
       userId: user.id,
       eventId: data.eventId,
       status: "pendente" as const,
-      frente: (data.frente || "campista").toLowerCase().replace(" ", "_") as "anjonoturno" | "animacao" | "assessores" | "campista" | "coordenacao" | "cozinha" | "estrutura" | "externa" | "intercessao" | "musicaEanimacao" | "primeiros_socorros",
+      frente: mapFrenteToEnum(data.frente || "campista"),
       arquivoUrl: publicUrlData.publicUrl,
       nomeArquivo: filename, // Usar o nome do arquivo gerado
       tipoArquivo: file.type,
