@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Heart, Check, AlertCircle, CheckCircle } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useCallback, useEffect } from "react";
 import { DadosPessoais } from "./DadosPessoais";
@@ -222,7 +221,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
       showSuccess("Cadastro realizado com sucesso! Redirecionando...");
       
       setTimeout(() => {
-        router.push("/sucesso");
+        router.push("/acampa/sucesso");
       }, 1500);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro inesperado. Tente novamente.";
@@ -360,7 +359,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
                 { step: 1, name: "Dados Pessoais" },
                 { step: 2, name: "Ficha de Saúde" },
                 { step: 3, name: "Termos e Condições" }
-              ].map(({ step, name }, index) => (
+              ].map(({ step, name }) => (
                 <div key={step} className="flex items-center space-x-3">
                   {/* Step Number */}
                   <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 ${
