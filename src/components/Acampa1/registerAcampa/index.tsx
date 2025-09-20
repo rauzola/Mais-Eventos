@@ -12,7 +12,7 @@ import {
 import { Heart, Check, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { DadosPessoais } from "./DadosPessoais";
 import { FichaSaude } from "./FichaSaude";
 import { TermosCondicoes } from "./TermosCondicoes";
@@ -129,6 +129,11 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
   const updateFormData = useCallback((data: Partial<CadastroData>) => {
     setFormData(prev => ({ ...prev, ...data }));
   }, []);
+
+  // Scroll to top whenever step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
 
   const handleNext = () => {
     if (currentStep < 3) {
@@ -389,15 +394,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
           </div>
         )}
 
-        {/* Login Link */}
-        {/* <div className="text-center mt-6">
-          <p className="text-gray-600">
-            Já possui uma conta?{" "}
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              Faça login
-            </Link>
-          </p>
-        </div> */}
+       
       </div>
     </div>
   );
