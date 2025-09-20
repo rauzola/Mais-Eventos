@@ -7,7 +7,7 @@ type AppRole = "USER" | "STAFF" | "COORD" | "CONCELHO" | "ADMIN";
 
 export function MaybeSidebar({ role }: { role: AppRole }) {
   const pathname = usePathname();
-  const hideMenuRoutes = ["/login", "/cadastro", "/acampa/acampa-de-novembro", "/acampa/[id]"]; // rotas sem sidebar
+  const hideMenuRoutes = ["/login", "/cadastro", "/acampa/acampa-novembro-2025", "/acampa/acampa-novembro-2025-servos", "/acampa/[id]"];
   const shouldShowMenu = !hideMenuRoutes.includes(pathname);
 
   if (!shouldShowMenu) return null;
