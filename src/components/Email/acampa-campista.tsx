@@ -95,7 +95,7 @@ export const acampaCapista: React.FC<Readonly<acampaCapistaProps>> = ({
           Durante o acampamento, você participará de dinâmicas e atividades enriquecedoras que fortalecem a fé e a convivência fraterna, e para isso, pedimos atenção às instruções gerais:
         </p>
         <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#374151', marginBottom: '15px' }}>
-          Caso tenha alguma dúvida entrar em contato com a Renata pelo WhatsApp do Projeto Mais Vida <strong>44 99137-2331</strong>
+          Caso tenha alguma dúvida entrar em contato com o Odejair pelo WhatsApp do Projeto Mais Vida <strong>44 99137-2331</strong>
         </p>
         <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#374151', marginBottom: '25px' }}>
           É muito importante que você salve o nosso número em seu celular, pois enviaremos algumas informações via lista de transmissão.
