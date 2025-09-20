@@ -28,6 +28,7 @@ type ApiEvent = {
   meals_included?: boolean | null;
   accommodation_included?: boolean | null;
   confirmation_text?: string | null;
+  participant_type?: string | null;
 };
 
 export default function Acampa1({ event }: { event: ApiEvent })  {

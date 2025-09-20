@@ -29,6 +29,7 @@ type DbEvent = {
   meals_included?: boolean | null;
   accommodation_included?: boolean | null;
   confirmation_text?: string | null;
+  participant_type?: string | null;
 };
 
 type ApiEvent = {
@@ -57,6 +58,7 @@ type ApiEvent = {
   meals_included?: boolean | null;
   accommodation_included?: boolean | null;
   confirmation_text?: string | null;
+  participant_type?: string | null;
 };
 
 async function getEvent(id: string): Promise<ApiEvent | null> {
@@ -88,6 +90,7 @@ async function getEvent(id: string): Promise<ApiEvent | null> {
     meals_included: ev.meals_included ?? null,
     accommodation_included: ev.accommodation_included ?? null,
     confirmation_text: ev.confirmation_text ?? null,
+    participant_type: ev.participant_type ?? null,
   };
 }
 

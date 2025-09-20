@@ -34,6 +34,7 @@ type EventCreateInput = {
   event_date_start?: Date | string | null;
   event_time_start?: string | null;
   confirmation_text?: string | null;
+  participant_type?: string | null;
 };
 
 type EventsFindManyArgs = {
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
       event_date_start: toDateOrNull(body.event_date_start) ?? null,
       event_time_start: body.event_time_start ?? null,
       confirmation_text: body.confirmation_text ?? null,
+      participant_type: body.participant_type ?? null,
     };
     console.log("Dados sendo enviados para Prisma:", data);
     const created = await db.event.create({ data });

@@ -46,7 +46,53 @@ interface InstrucoesGeraisProps {
     meals_included?: boolean | null;
     accommodation_included?: boolean | null;
     confirmation_text?: string | null;
+    participant_type?: string | null;
   };
+}
+
+// Função para converter números para escrita por extenso em português
+function numberToWords(value: number): string {
+  const units = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+  const teens = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+  const tens = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+  const hundreds = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+  if (value === 0) return 'zero';
+  if (value < 0) return 'menos ' + numberToWords(-value);
+
+  let result = '';
+
+  // Centenas
+  if (value >= 100) {
+    const hundred = Math.floor(value / 100);
+    if (hundred === 1 && value % 100 === 0) {
+      return 'cem';
+    }
+    result += hundreds[hundred];
+    value %= 100;
+    if (value > 0) {
+      result += ' e ';
+    }
+  }
+
+  // Dezenas e unidades
+  if (value >= 20) {
+    const ten = Math.floor(value / 10);
+    result += tens[ten];
+    value %= 10;
+    if (value > 0) {
+      result += ' e ';
+    }
+  } else if (value >= 10) {
+    result += teens[value - 10];
+    value = 0;
+  }
+
+  if (value > 0) {
+    result += units[value];
+  }
+
+  return result;
 }
 
 export function InstrucoesGerais({ onNext, event }: InstrucoesGeraisProps) {
@@ -220,10 +266,10 @@ export function InstrucoesGerais({ onNext, event }: InstrucoesGeraisProps) {
           <ul className="list-disc list-inside space-y-2 text-gray-700">
             <li>
               <strong>Valor da inscrição:</strong> R$ {event?.price ? event.price.toFixed(2).replace('.', ',') : '350,00'}
-              {event?.price ? ` (${event.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})` : ' (Trezentos e cinquenta reais)'}
+              {event?.price ? ` (${numberToWords(Math.floor(event.price))} reais)` : ' (trezentos e cinquenta reais)'}
             </li>
             {event?.confirmation_text && (
-              <li>
+              <li className={event?.participant_type === "espera" ? "text-red-600 font-semibold" : ""}>
                 {event.confirmation_text}
               </li>
             )}
@@ -250,53 +296,57 @@ export function InstrucoesGerais({ onNext, event }: InstrucoesGeraisProps) {
           </ul>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-          <h4 className="font-bold text-green-800 mb-2">
-            DADOS BANCÁRIOS:
-          </h4>
-          
-          {/* Informações de pagamento do evento se disponível */}
-          {event?.payment_info ? (
-            <div className="text-gray-700 mb-4">
-              <div dangerouslySetInnerHTML={{ __html: event.payment_info }} />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-              <div>
-                <p>
-                  <strong>Chave de Pix:</strong> CNPJ
-                  04.585.680/0001-03
-                </p>
-                <p>
-                  <strong>Nome:</strong> {event?.organizer_name || "Projeto Mais Vida"}
-                </p>
-                <p>
-                  <strong>CNPJ:</strong> 04.585.680/0001-03
-                </p>
+
+        {/* Só mostra os dados bancários se não for lista de espera */}
+        {event?.participant_type !== "espera" && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <h4 className="font-bold text-green-800 mb-2">
+              DADOS BANCÁRIOS:
+            </h4>
+            
+            {/* Informações de pagamento do evento se disponível */}
+            {event?.payment_info ? (
+              <div className="text-gray-700 mb-4">
+                <div dangerouslySetInnerHTML={{ __html: event.payment_info }} />
               </div>
-              <div>
-                <p>
-                  <strong>Banco:</strong> CEF (Caixa Econômica
-                  Federal)
-                </p>
-                <p>
-                  <strong>Operação:</strong> 003
-                </p>
-                <p>
-                  <strong>Agência:</strong> 0395
-                </p>
-                <p>
-                  <strong>Conta Jurídica:</strong> 4839-2
-                </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                <div>
+                  <p>
+                    <strong>Chave de Pix:</strong> CNPJ
+                    04.585.680/0001-03
+                  </p>
+                  <p>
+                    <strong>Nome:</strong> {event?.organizer_name || "Projeto Mais Vida"}
+                  </p>
+                  <p>
+                    <strong>CNPJ:</strong> 04.585.680/0001-03
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <strong>Banco:</strong> CEF (Caixa Econômica
+                    Federal)
+                  </p>
+                  <p>
+                    <strong>Operação:</strong> 003
+                  </p>
+                  <p>
+                    <strong>Agência:</strong> 0395
+                  </p>
+                  <p>
+                    <strong>Conta Jurídica:</strong> 4839-2
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          
-          <p className="mt-2 text-gray-700">
-            <strong>Parcelamento:</strong> Entre em contato pelo
-            WhatsApp: {event?.organizer_contact || "44 99137-2331"}
-          </p>
-        </div>
+            )}
+            
+            <p className="mt-2 text-gray-700">
+              <strong>Parcelamento:</strong> Entre em contato pelo
+              WhatsApp: {event?.organizer_contact || "44 99137-2331"}
+            </p>
+          </div>
+        )}
 
         <Separator className="my-6" />
 

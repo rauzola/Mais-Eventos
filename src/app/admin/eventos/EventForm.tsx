@@ -36,6 +36,7 @@ export type EventFormValues = {
   meals_included?: boolean | null;
   accommodation_included?: boolean | null;
   confirmation_text?: string | null;
+  participant_type?: string | null;
 };
 
 export function EventForm({
@@ -76,6 +77,7 @@ export function EventForm({
     meals_included: initialValues?.meals_included ?? false,
     accommodation_included: initialValues?.accommodation_included ?? false,
     confirmation_text: initialValues?.confirmation_text ?? "",
+    participant_type: initialValues?.participant_type ?? "",
   });
 
   const [loading, setLoading] = React.useState(false);
@@ -126,6 +128,7 @@ export function EventForm({
         meals_included: Boolean(values.meals_included),
         accommodation_included: Boolean(values.accommodation_included),
         confirmation_text: values.confirmation_text || null,
+        participant_type: values.participant_type || null,
       };
 
       console.log("Payload sendo enviado:", payload);
@@ -258,7 +261,7 @@ export function EventForm({
           </div>
 
           {/* 7. Texto para Confirmar Inscrição */}
-          <div>
+            <div>
             <label className="block text-sm font-medium mb-2">Texto para Confirmar Inscrição</label>
             <Textarea 
               rows={4} 
@@ -267,10 +270,25 @@ export function EventForm({
               placeholder="Texto que será exibido após a confirmação da inscrição..." 
               className="w-full"
             />
-          </div>
+            </div>
 
-          {/* 8. URL da Imagem */}
-          <div>
+          {/* 8. Tipo de Participante */}
+            <div>
+            <label className="block text-sm font-medium mb-2">Tipo de Participante</label>
+            <Select value={values.participant_type || ""} onValueChange={(v) => handleChange("participant_type", v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o tipo de participante" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="campista">🏕️ Campista</SelectItem>
+                <SelectItem value="servo">🙋‍♂️ Servo</SelectItem>
+                <SelectItem value="espera">⏳ Lista de Espera</SelectItem>
+              </SelectContent>
+            </Select>
+            </div>
+
+          {/* 9. URL da Imagem */}
+            <div>
             <label className="block text-sm font-medium mb-2">URL da Imagem</label>
             <Input 
               value={values.image_url ?? ""} 
@@ -278,7 +296,7 @@ export function EventForm({
               placeholder="https://exemplo.com/imagem.jpg" 
               className="w-full"
             />
-          </div>
+            </div>
 
           {/* Campos Adicionais (Opcionais) */}
           <div className="border-t pt-6">
@@ -323,47 +341,47 @@ export function EventForm({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
+            <div>
                 <label className="block text-sm font-medium mb-2">Local do Evento</label>
-                <Input value={values.location ?? ""} onChange={(e) => handleChange("location", e.target.value)} placeholder="Ex: Casa de Retiros São José, Maringá" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Nome do Organizador</label>
-                <Input value={values.organizer_name ?? ""} onChange={(e) => handleChange("organizer_name", e.target.value)} placeholder="Ex: Pastoral da Juventude" />
-              </div>
+              <Input value={values.location ?? ""} onChange={(e) => handleChange("location", e.target.value)} placeholder="Ex: Casa de Retiros São José, Maringá" />
             </div>
+            <div>
+                <label className="block text-sm font-medium mb-2">Nome do Organizador</label>
+              <Input value={values.organizer_name ?? ""} onChange={(e) => handleChange("organizer_name", e.target.value)} placeholder="Ex: Pastoral da Juventude" />
+            </div>
+          </div>
 
             <div className="mt-4">
               <label className="block text-sm font-medium mb-2">Contato do Organizador</label>
-              <Input value={values.organizer_contact ?? ""} onChange={(e) => handleChange("organizer_contact", e.target.value)} placeholder="Ex: (44) 99999-9999 ou email@exemplo.com" />
-            </div>
+            <Input value={values.organizer_contact ?? ""} onChange={(e) => handleChange("organizer_contact", e.target.value)} placeholder="Ex: (44) 99999-9999 ou email@exemplo.com" />
+          </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
+            <div>
                 <label className="block text-sm font-medium mb-2">Máximo de Participantes</label>
-                <Input type="number" min="1" value={values.max_participants === null || values.max_participants === undefined ? "" : String(values.max_participants)} onChange={(e) => handleNumberChange("max_participants", e.target.value)} placeholder="Ex: 50" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Status do Evento</label>
-                <Select value={values.status} onValueChange={(v) => handleChange("status", v)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">✅ Ativo</SelectItem>
-                    <SelectItem value="inativo">⏸️ Inativo</SelectItem>
-                    <SelectItem value="lotado">🎯 Lotado</SelectItem>
-                    <SelectItem value="cancelado">❌ Cancelado</SelectItem>
-                    <SelectItem value="finalizado">✔️ Finalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Input type="number" min="1" value={values.max_participants === null || values.max_participants === undefined ? "" : String(values.max_participants)} onChange={(e) => handleNumberChange("max_participants", e.target.value)} placeholder="Ex: 50" />
             </div>
+            <div>
+                <label className="block text-sm font-medium mb-2">Status do Evento</label>
+              <Select value={values.status} onValueChange={(v) => handleChange("status", v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ativo">✅ Ativo</SelectItem>
+                  <SelectItem value="inativo">⏸️ Inativo</SelectItem>
+                  <SelectItem value="lotado">🎯 Lotado</SelectItem>
+                  <SelectItem value="cancelado">❌ Cancelado</SelectItem>
+                  <SelectItem value="finalizado">✔️ Finalizado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
             <div className="mt-4">
               <label className="block text-sm font-medium mb-2">Informações de Pagamento</label>
-              <Textarea rows={3} value={values.payment_info ?? ""} onChange={(e) => handleChange("payment_info", e.target.value)} placeholder="Como realizar o pagamento, dados bancários, etc..." />
-            </div>
+            <Textarea rows={3} value={values.payment_info ?? ""} onChange={(e) => handleChange("payment_info", e.target.value)} placeholder="Como realizar o pagamento, dados bancários, etc..." />
+          </div>
 
             <div className="mt-4">
               <label className="block text-sm font-medium mb-2">Instruções Gerais</label>
@@ -377,23 +395,23 @@ export function EventForm({
 
             <div className="mt-4">
               <label className="block text-sm font-medium mb-2">Itens obrigatórios (um por linha)</label>
-              <Textarea rows={4} value={(values.required_items ?? []).join("\n")} onChange={(e) => setValues((prev) => ({ ...prev, required_items: e.target.value.split("\n").map(s => s).filter(Boolean) }))} placeholder="Digite um item por linha" />
-            </div>
+            <Textarea rows={4} value={(values.required_items ?? []).join("\n")} onChange={(e) => setValues((prev) => ({ ...prev, required_items: e.target.value.split("\n").map(s => s).filter(Boolean) }))} placeholder="Digite um item por linha" />
+          </div>
 
             <div className="mt-4">
               <label className="block text-sm font-medium mb-2">Informações sobre Transporte</label>
-              <Textarea rows={3} value={values.transportation ?? ""} onChange={(e) => handleChange("transportation", e.target.value)} placeholder="Como chegar ao local, transporte disponível, etc..." />
-            </div>
+            <Textarea rows={3} value={values.transportation ?? ""} onChange={(e) => handleChange("transportation", e.target.value)} placeholder="Como chegar ao local, transporte disponível, etc..." />
+          </div>
 
             <div className="flex items-center gap-6 mt-4 pt-4 border-t">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={Boolean(values.meals_included)} onChange={(e) => handleBoolChange("meals_included", e.target.checked)} />
-                🍽️ Alimentação inclusa
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={Boolean(values.accommodation_included)} onChange={(e) => handleBoolChange("accommodation_included", e.target.checked)} />
-                🏠 Acomodação inclusa
-              </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={Boolean(values.meals_included)} onChange={(e) => handleBoolChange("meals_included", e.target.checked)} />
+              🍽️ Alimentação inclusa
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={Boolean(values.accommodation_included)} onChange={(e) => handleBoolChange("accommodation_included", e.target.checked)} />
+              🏠 Acomodação inclusa
+            </label>
             </div>
           </div>
         </CardContent>

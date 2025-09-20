@@ -17,6 +17,7 @@ type EventRecord = {
   event_date_start?: Date | null;
   event_time_start?: string | null;
   confirmation_text?: string | null;
+  participant_type?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

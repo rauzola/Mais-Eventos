@@ -83,6 +83,7 @@ interface RegisterFormContentProps {
     meals_included?: boolean | null;
     accommodation_included?: boolean | null;
     confirmation_text?: string | null;
+    participant_type?: string | null;
   };
 }
 
@@ -283,10 +284,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
             <Heart className="h-8 w-8 text-blue-600 mr-2" />
             <h1 className="text-2xl font-bold text-blue-600">Projeto Mais Vida</h1>
           </div>
-          <p className="text-gray-600">
-            {eventId}
-            Junte-se a nós em uma jornada de saúde e bem-estar
-          </p>
+         
         </div>
 
         {/* Progress Bar */}
@@ -392,14 +390,14 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
         )}
 
         {/* Login Link */}
-        <div className="text-center mt-6">
+        {/* <div className="text-center mt-6">
           <p className="text-gray-600">
             Já possui uma conta?{" "}
             <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
               Faça login
             </Link>
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
@@ -433,6 +431,7 @@ interface RegisterFormProps {
     meals_included?: boolean | null;
     accommodation_included?: boolean | null;
     confirmation_text?: string | null;
+    participant_type?: string | null;
   };
 }
 
