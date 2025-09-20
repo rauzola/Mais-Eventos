@@ -104,6 +104,20 @@ enum ParticipantType {
   espera
 }
 
+enum FrenteType {
+  anjonoturno
+  animacao
+  assessores
+  campista
+  coordenacao
+  cozinha
+  estrutura
+  externa
+  intercessao
+  musicaEanimacao
+  primeiros_socorros
+}
+
 model Event {
   id                String      @id @default(cuid())
   title             String
@@ -159,6 +173,9 @@ model InscricaoEvento {
   comprovantePagamento String?
   valorPago         Float?
   formaPagamento    String?
+  
+  // Frente de trabalho
+  frente            FrenteType     @default(campista)
   
   // Arquivos enviados
   arquivoUrl        String?        // URL do arquivo no Supabase Storage

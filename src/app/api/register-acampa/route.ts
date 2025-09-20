@@ -21,6 +21,7 @@ interface RegisterAcampaRequest {
   contatoEmergencia: string;
   telefoneEmergencia: string;
   cidade: string;
+  frente: string;
   
   // Ficha de Saúde
   portadorDoenca: string;
@@ -255,6 +256,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       eventId: data.eventId,
       status: "pendente" as const,
+      frente: (data.frente || "campista").toLowerCase().replace(" ", "_") as "anjonoturno" | "animacao" | "assessores" | "campista" | "coordenacao" | "cozinha" | "estrutura" | "externa" | "intercessao" | "musicaEanimacao" | "primeiros_socorros",
       arquivoUrl: publicUrlData.publicUrl,
       nomeArquivo: filename, // Usar o nome do arquivo gerado
       tipoArquivo: file.type,

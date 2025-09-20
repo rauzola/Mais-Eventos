@@ -39,6 +39,7 @@ export interface CadastroData {
   contatoEmergencia: string;
   telefoneEmergencia: string;
   cidade: string;
+  frente: string;
   senha: string;
   confirmarSenha: string;
   arquivo: File | null;
@@ -110,6 +111,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
     contatoEmergencia: "",
     telefoneEmergencia: "",
     cidade: "",
+    frente: "campista",
     senha: "",
     confirmarSenha: "",
     arquivo: null,
@@ -183,6 +185,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
         contatoEmergencia: formData.contatoEmergencia,
         telefoneEmergencia: formData.telefoneEmergencia,
         cidade: formData.cidade,
+        frente: formData.frente,
         
         // Ficha de Saúde
         portadorDoenca: formData.portadorDoenca,
@@ -246,6 +249,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
             onPrevious={handlePrevious}
             onNext={handleNext}
             setFormError={setFormError}
+            event={event}
           />
         );
       case 2:

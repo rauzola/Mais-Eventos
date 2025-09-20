@@ -17,6 +17,9 @@ interface DadosPessoaisProps {
   onPrevious: () => void;
   onNext: () => void;
   setFormError: (error: string) => void;
+  event?: {
+    participant_type?: string | null;
+  };
 }
 
 export const DadosPessoais = ({ 
@@ -24,7 +27,8 @@ export const DadosPessoais = ({
   updateData, 
   onPrevious,
   onNext, 
-  setFormError 
+  setFormError,
+  event
 }: DadosPessoaisProps) => {
   const { showError } = useToast();
   const [passwordValidation, setPasswordValidation] = useState<{
@@ -197,6 +201,10 @@ export const DadosPessoais = ({
     }
     if (!data.cidade?.trim()) {
       showError("Cidade é obrigatória");
+      return;
+    }
+    if (event?.participant_type === "servo" && !data.frente?.trim()) {
+      showError("Frente de Trabalho é obrigatória");
       return;
     }
     
@@ -786,6 +794,29 @@ export const DadosPessoais = ({
             </Select>
           )}
         </div>
+        
+        {event?.participant_type === "servo" && (
+        <div>
+          <Label htmlFor="frente">Frente de Trabalho *</Label>
+          <Select value={data.frente} onValueChange={(value) => updateData({ frente: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione sua frente" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="anjonoturno">Anjo Noturno</SelectItem>
+              <SelectItem value="animacao">Animação / Música</SelectItem>
+              <SelectItem value="assessores">Assessores</SelectItem>
+              <SelectItem value="coordenacao">Coordenação</SelectItem>
+              <SelectItem value="cozinha">Cozinha</SelectItem>
+              <SelectItem value="estrutura">Estrutura</SelectItem>
+              <SelectItem value="externa">Externa</SelectItem>
+              <SelectItem value="intercessao">Intercessão</SelectItem>
+              <SelectItem value="musicaEanimacao">Música e Animação</SelectItem>
+              <SelectItem value="primeiros_socorros">Primeiros Socorros / Loja</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+           )}
         
         <div className="md:col-span-2">
           <Label htmlFor="arquivo">Documento/Comprovante *</Label>
