@@ -8,9 +8,9 @@ import { prisma } from "@/lib/prisma-vercel";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sistema de Autenticação - Projeto Mais Vida",
+  title: "Sistema de Eventos - Projeto Mais Vida",
   description:
-    "Sistema de autenticação e autorização com controle de permissões",
+    "Sistema de Eventos para o Projeto Mais Vida",
 };
 
 export default async function RootLayout({
