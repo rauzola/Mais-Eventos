@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, ArrowLeft, Eye, EyeOff, Search, Upload, FileText, Image, X } from "lucide-react";
+import { ArrowRight, ArrowLeft, Eye, EyeOff, Upload, FileText, Image, X } from "lucide-react";
 import { CadastroData } from "./index";
 import { applyCpfMask, applyPhoneMask, applyDateMask, validatePassword } from "@/lib/masks";
 import { citiesParana } from "@/lib/cities-parana";
 import { useToast } from "@/components/ui/toast";
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface DadosPessoaisProps {
   data: CadastroData;
@@ -45,9 +45,7 @@ export const DadosPessoais = ({
   const [showOutraCidade, setShowOutraCidade] = useState(false);
   
   // Estados para busca de cidades
-  const [cidadeSearch, setCidadeSearch] = useState("");
   const [showCidadeSelect, setShowCidadeSelect] = useState(false);
-  const searchTimeoutRef = useRef<number | null>(null);
   
   // Estados para validação de email e CPF
   const [emailValidation, setEmailValidation] = useState<{
@@ -82,35 +80,10 @@ export const DadosPessoais = ({
   const emailTimeoutRef = useRef<number | null>(null);
   const cpfTimeoutRef = useRef<number | null>(null);
 
-  // Memoização das cidades filtradas para melhor performance
-  const filteredCities = useMemo(() => {
-    if (!cidadeSearch.trim()) {
-      return citiesParana;
-    }
-    
-    const searchTerm = cidadeSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return citiesParana.filter(city => 
-      city.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(searchTerm)
-    );
-  }, [cidadeSearch]);
-
-  // Debounce para busca de cidades
-  const handleCidadeSearch = useCallback((value: string) => {
-    if (searchTimeoutRef.current) {
-      window.clearTimeout(searchTimeoutRef.current);
-    }
-    
-    searchTimeoutRef.current = window.setTimeout(() => {
-      setCidadeSearch(value);
-    }, 300);
-  }, []);
 
   // Limpar timeouts quando componente desmontar
   useEffect(() => {
     return () => {
-      if (searchTimeoutRef.current) {
-        window.clearTimeout(searchTimeoutRef.current);
-      }
       if (emailTimeoutRef.current) {
         window.clearTimeout(emailTimeoutRef.current);
       }
@@ -755,32 +728,13 @@ export const DadosPessoais = ({
                 <SelectValue placeholder="Selecione sua cidade" />
               </SelectTrigger>
               <SelectContent className="max-h-60">
-                {/* Campo de busca */}
-                <div className="p-2 border-b">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Buscar cidade..."
-                      value={cidadeSearch}
-                      onChange={(e) => handleCidadeSearch(e.target.value)}
-                      className="pl-8 h-8 text-sm"
-                    />
-                  </div>
-                </div>
-                
-                {/* Lista de cidades com virtualização básica */}
+                {/* Lista de cidades */}
                 <div className="max-h-48 overflow-y-auto">
-                  {filteredCities.length > 0 ? (
-                    filteredCities.map((city) => (
-                      <SelectItem key={`city-${city}`} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-2 text-sm text-gray-500 text-center">
-                      Nenhuma cidade encontrada
-                    </div>
-                  )}
+                  {citiesParana.map((city) => (
+                    <SelectItem key={`city-${city}`} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))}
                 </div>
                 
                 {/* Separador */}
