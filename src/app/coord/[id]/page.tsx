@@ -280,13 +280,22 @@ export default function CoordEventDetailPage() {
       "Nome",
       "Email",
       "CPF",
-      "Telefone",
-      "Cidade",
       "Data Nascimento",
+      "Estado Civil",
       "Tamanho Camiseta",
       "Profissão",
+      "Telefone",
       "Contato Emergência",
       "Telefone Emergência",
+      "Cidade",
+      "Portador Doença",
+      "Alergia/Intolerância",
+      "Medicação",
+      "Restrição Alimentar",
+      "Operadora",
+      "Número Plano",
+      "Arquivo URL",
+      "Nome Arquivo",
       "Status",
       "Frente",
       "Data Inscrição",
@@ -299,13 +308,22 @@ export default function CoordEventDetailPage() {
         inscricao.user.nomeCompleto || "",
         inscricao.user.email,
         inscricao.user.cpf || "",
-        inscricao.user.telefone || "",
-        inscricao.user.cidade || "",
         inscricao.user.dataNascimento ? formatDate(inscricao.user.dataNascimento.toString()) : "",
+        getEstadoCivilLabel(inscricao.user.estadoCivil),
         inscricao.user.tamanhoCamiseta || "",
         inscricao.user.profissao || "",
+        inscricao.user.telefone || "",
         inscricao.user.contatoEmergencia || "",
         inscricao.user.telefoneEmergencia || "",
+        inscricao.user.cidade || "",
+        inscricao.user.portadorDoenca || "",
+        inscricao.user.alergiaIntolerancia || "",
+        inscricao.user.medicacaoUso || "",
+        inscricao.user.restricaoAlimentar || "",
+        inscricao.user.operadora || "",
+        inscricao.user.numeroPlano || "",
+        inscricao.arquivoUrl || "",
+        inscricao.nomeArquivo || "",
         getStatusLabel(inscricao.status),
         getFrenteLabel(inscricao.frente),
         formatDateTime(inscricao.dataInscricao),
@@ -567,6 +585,13 @@ export default function CoordEventDetailPage() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato Emergência</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tel. Emergência</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cidade</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portador Doença</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alergia/Intolerância</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medicação</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restrição Alimentar</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operadora</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número Plano</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comprovante</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frente</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Inscrição</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
@@ -613,6 +638,38 @@ export default function CoordEventDetailPage() {
                           </td>
                           <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
                             {inscricao.user.cidade || "Não informado"}
+                          </td>
+                          <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                            {inscricao.user.portadorDoenca || "Não informado"}
+                          </td>
+                          <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                            {inscricao.user.alergiaIntolerancia || "Não informado"}
+                          </td>
+                          <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                            {inscricao.user.medicacaoUso || "Não informado"}
+                          </td>
+                          <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                            {inscricao.user.restricaoAlimentar || "Não informado"}
+                          </td>
+                          <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                            {inscricao.user.operadora || "Não informado"}
+                          </td>
+                          <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                            {inscricao.user.numeroPlano || "Não informado"}
+                          </td>
+                          <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                            {inscricao.arquivoUrl ? (
+                              <a 
+                                href={inscricao.arquivoUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Visualizar Comprovante
+                              </a>
+                            ) : (
+                              "Não enviado"
+                            )}
                           </td>
                           <td className={`px-4 py-4 whitespace-nowrap text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
                             {getFrenteLabel(inscricao.frente)}
