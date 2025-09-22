@@ -129,7 +129,7 @@ export const acampaCapista: React.FC<Readonly<acampaCapistaProps>> = ({
           }}>
             <li><strong>Início:</strong> {eventDateStart || "20 de novembro de 2025 (Quinta-feira)"}</li>
             <li><strong>Retorno:</strong> {eventDateEnd || "23 de novembro de 2025 (Domingo)"}</li>
-            <li><strong>Local de saída:</strong> Estacionamento dos fundos da Catedral (o Projeto Mais Vida disponibilizará ônibus para traslado de todos os campistas até a fazenda)</li>
+            <li><strong>Local de saída:</strong> Estacionamento dos fundos da Catedral (o Projeto Mais Vida disponibilizará ônibus para translado de todos os campistas até a fazenda)</li>
           </ul>
         </div>
       </div>

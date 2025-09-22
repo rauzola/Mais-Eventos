@@ -275,13 +275,13 @@ export function InstrucoesGerais({ onNext, event }: InstrucoesGeraisProps) {
             )}
             <li>
               <strong>
-                Direito de Arrependimento (Até 7 dias):
+                Direito de Arrependimento (Até 7 dias da data de inscrição):
               </strong>{" "}
               Reembolso total.
             </li>
             <li>
               <strong>
-                Desistência entre 8º dia e até 5 dias antes:
+                Desistência entre 8º dia e até 5 dias antes do acampamento:
               </strong>{" "}
               Reembolso de 50% do valor.
             </li>
