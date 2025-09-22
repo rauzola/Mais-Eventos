@@ -664,143 +664,261 @@ export default function CoordEventDetailPage() {
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="divide-y">
-                  {inscricoesFiltradas.map((inscricao) => (
-                    <div key={inscricao.id} className={`p-6 transition-colors ${isInactiveOrCancelled(inscricao.status) ? 'bg-red-50 hover:bg-red-100 border-l-4 border-red-500' : 'hover:bg-gray-50'}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-gray-500" />
-                              <h3 className={`text-lg font-semibold ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
-                                {inscricao.user.nomeCompleto || "Nome não informado"}
-                              </h3>
-                            </div>
-                            <Badge className={getStatusColor(inscricao.status)}>
-                              {getStatusLabel(inscricao.status)}
-                            </Badge>
-                            <Badge variant="outline">
-                              {getFrenteLabel(inscricao.frente)}
-                            </Badge>
-                          </div>
-                          
-                          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-600'}`}>
-                            <div className="space-y-2">
-                              <div className="flex items-center">
-                                <Mail className="w-4 h-4 mr-2" />
-                                {inscricao.user.email}
+                ) : (
+                  <div className="space-y-6 p-6">
+                    {inscricoesFiltradas.map((inscricao) => (
+                      <div key={inscricao.id} className={`bg-white rounded-xl shadow-lg border transition-all duration-200 hover:shadow-xl ${isInactiveOrCancelled(inscricao.status) ? 'border-red-200 bg-red-50/50' : 'border-gray-200 hover:border-gray-300'}`}>
+                        {/* Header do Card */}
+                        <div className={`p-6 border-b ${isInactiveOrCancelled(inscricao.status) ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className={`p-2 rounded-full ${isInactiveOrCancelled(inscricao.status) ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                    <User className={`w-5 h-5 ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-blue-600'}`} />
+                                  </div>
+                                  <h3 className={`text-xl font-bold ${isInactiveOrCancelled(inscricao.status) ? 'text-red-700' : 'text-gray-900'}`}>
+                                    {inscricao.user.nomeCompleto || "Nome não informado"}
+                                  </h3>
+                                </div>
                               </div>
-                              {inscricao.user.telefone && (
-                                <div className="flex items-center">
-                                  <Phone className="w-4 h-4 mr-2" />
-                                  {inscricao.user.telefone}
-                                </div>
-                              )}
-                              {inscricao.user.cpf && (
-                                <div className="flex items-center">
-                                  <FileText className="w-4 h-4 mr-2" />
-                                  {inscricao.user.cpf}
-                                </div>
-                              )}
+                              <div className="flex flex-wrap gap-2">
+                                <Badge className={`${getStatusColor(inscricao.status)} font-medium`}>
+                                  {getStatusLabel(inscricao.status)}
+                                </Badge>
+                                <Badge variant="outline" className="font-medium">
+                                  {getFrenteLabel(inscricao.frente)}
+                                </Badge>
+                              </div>
                             </div>
                             
-                            <div className="space-y-2">
-                              {inscricao.user.cidade && (
-                                <div className="flex items-center">
-                                  <MapPin className="w-4 h-4 mr-2" />
-                                  {inscricao.user.cidade}
+                            {/* Botão de Ações */}
+                            <div className="ml-4">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem 
+                                    onClick={() => updateInscricaoStatus(inscricao.id, "pendente")}
+                                    className="text-blue-600"
+                                  >
+                                    <Clock className="w-4 h-4 mr-2" />
+                                    Pendente
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => updateInscricaoStatus(inscricao.id, "confirmada")}
+                                    className="text-green-600"
+                                  >
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Confirmada
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => updateInscricaoStatus(inscricao.id, "cancelada")}
+                                    className="text-red-600"
+                                  >
+                                    <AlertTriangle className="w-4 h-4 mr-2" />
+                                    Cancelada
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => updateInscricaoStatus(inscricao.id, "inativo")}
+                                    className="text-gray-600"
+                                  >
+                                    <EyeOff className="w-4 h-4 mr-2" />
+                                    Inativo
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Conteúdo do Card */}
+                        <div className="p-6 space-y-8">
+                          {/* Dados Pessoais */}
+                          <div>
+                            <h4 className={`text-sm font-semibold mb-4 flex items-center ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                              <User className="w-4 h-4 mr-2" />
+                              Dados Pessoais
+                            </h4>
+                            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-600'}`}>
+                              <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                <Mail className="w-4 h-4 mr-3 text-gray-400" />
+                                <span className="font-medium w-20">Email:</span>
+                                <span className="ml-2">{inscricao.user.email}</span>
+                              </div>
+                              {inscricao.user.cpf && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">CPF:</span>
+                                  <span className="ml-2">{inscricao.user.cpf}</span>
                                 </div>
                               )}
-                              {inscricao.user.profissao && (
-                                <div className="flex items-center">
-                                  <Briefcase className="w-4 h-4 mr-2" />
-                                  {inscricao.user.profissao}
+                              {inscricao.user.dataNascimento && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <Calendar className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Nascimento:</span>
+                                  <span className="ml-2">{formatDate(inscricao.user.dataNascimento.toString())}</span>
+                                </div>
+                              )}
+                              {inscricao.user.estadoCivil && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <User className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Estado Civil:</span>
+                                  <span className="ml-2">{getEstadoCivilLabel(inscricao.user.estadoCivil)}</span>
                                 </div>
                               )}
                               {inscricao.user.tamanhoCamiseta && (
-                                <div className="flex items-center">
-                                  <Shirt className="w-4 h-4 mr-2" />
-                                  {inscricao.user.tamanhoCamiseta}
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <Shirt className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Camiseta:</span>
+                                  <span className="ml-2">{getTamanhoCamisetaLabel(inscricao.user.tamanhoCamiseta)}</span>
                                 </div>
                               )}
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-2" />
-                                Inscrito em: {formatDateTime(inscricao.dataInscricao)}
-                              </div>
-                              {inscricao.dataConfirmacao && (
-                                <div className="flex items-center">
-                                  <Check className="w-4 h-4 mr-2" />
-                                  Confirmado em: {formatDateTime(inscricao.dataConfirmacao)}
+                              {inscricao.user.profissao && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <Briefcase className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Profissão:</span>
+                                  <span className="ml-2">{inscricao.user.profissao}</span>
+                                </div>
+                              )}
+                              {inscricao.user.telefone && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <Phone className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Telefone:</span>
+                                  <span className="ml-2">{inscricao.user.telefone}</span>
                                 </div>
                               )}
                               {inscricao.user.contatoEmergencia && (
-                                <div className="flex items-center">
-                                  <AlertTriangle className="w-4 h-4 mr-2" />
-                                  Emergência: {inscricao.user.contatoEmergencia}
-                                  {inscricao.user.telefoneEmergencia && ` - ${inscricao.user.telefoneEmergencia}`}
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <AlertTriangle className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Contato Emergência:</span>
+                                  <span className="ml-2">{inscricao.user.contatoEmergencia}</span>
+                                </div>
+                              )}
+                              {inscricao.user.telefoneEmergencia && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <Phone className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Tel. Emergência:</span>
+                                  <span className="ml-2">{inscricao.user.telefoneEmergencia}</span>
+                                </div>
+                              )}
+                              {inscricao.user.cidade && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <MapPin className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Cidade:</span>
+                                  <span className="ml-2">{inscricao.user.cidade}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Ficha de Saúde */}
+                          <div>
+                            <h4 className={`text-sm font-semibold mb-4 flex items-center ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                              <AlertTriangle className="w-4 h-4 mr-2" />
+                              Ficha de Saúde
+                            </h4>
+                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-600'}`}>
+                              {inscricao.user.portadorDoenca && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <AlertTriangle className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Portador Doença:</span>
+                                  <span className="ml-2">{inscricao.user.portadorDoenca}</span>
+                                </div>
+                              )}
+                              {inscricao.user.alergiaIntolerancia && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <AlertTriangle className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-24">Alergia/Intolerância:</span>
+                                  <span className="ml-2">{inscricao.user.alergiaIntolerancia}</span>
+                                </div>
+                              )}
+                              {inscricao.user.medicacaoUso && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Medicação:</span>
+                                  <span className="ml-2">{inscricao.user.medicacaoUso}</span>
+                                </div>
+                              )}
+                              {inscricao.user.restricaoAlimentar && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <AlertTriangle className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Restrição Alimentar:</span>
+                                  <span className="ml-2">{inscricao.user.restricaoAlimentar}</span>
+                                </div>
+                              )}
+                              {inscricao.user.operadora && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Operadora:</span>
+                                  <span className="ml-2">{inscricao.user.operadora}</span>
+                                </div>
+                              )}
+                              {inscricao.user.numeroPlano && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Número Plano:</span>
+                                  <span className="ml-2">{inscricao.user.numeroPlano}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Informações da Inscrição */}
+                          <div>
+                            <h4 className={`text-sm font-semibold mb-4 flex items-center ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                              <Clock className="w-4 h-4 mr-2" />
+                              Informações da Inscrição
+                            </h4>
+                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-600'}`}>
+                              <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                <Clock className="w-4 h-4 mr-3 text-gray-400" />
+                                <span className="font-medium w-20">Data Inscrição:</span>
+                                <span className="ml-2">{formatDateTime(inscricao.dataInscricao)}</span>
+                              </div>
+                              {inscricao.dataConfirmacao && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <Check className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-20">Data Confirmação:</span>
+                                  <span className="ml-2">{formatDateTime(inscricao.dataConfirmacao)}</span>
+                                </div>
+                              )}
+                              {inscricao.arquivoUrl && (
+                                <div className="flex items-center p-3 rounded-lg bg-gray-50">
+                                  <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                                  <span className="font-medium w-24">Comprovante:</span>
+                                  <a 
+                                    href={inscricao.arquivoUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="ml-2 text-blue-600 hover:text-blue-800 underline font-medium"
+                                  >
+                                    Visualizar Comprovante
+                                  </a>
                                 </div>
                               )}
                             </div>
                           </div>
                           
                           {inscricao.observacoes && (
-                            <div className={`mt-3 p-3 rounded-lg ${isInactiveOrCancelled(inscricao.status) ? 'bg-red-100' : 'bg-gray-50'}`}>
+                            <div className={`p-4 rounded-lg border ${isInactiveOrCancelled(inscricao.status) ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                              <h4 className={`text-sm font-semibold mb-2 flex items-center ${isInactiveOrCancelled(inscricao.status) ? 'text-red-600' : 'text-gray-900'}`}>
+                                <FileText className="w-4 h-4 mr-2" />
+                                Observações
+                              </h4>
                               <p className={`text-sm ${isInactiveOrCancelled(inscricao.status) ? 'text-red-700' : 'text-gray-700'}`}>
-                                <strong>Observações:</strong> {inscricao.observacoes}
+                                {inscricao.observacoes}
                               </p>
                             </div>
                           )}
                         </div>
-                        
-                        {/* Ações */}
-                        <div className="ml-6">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                onClick={() => updateInscricaoStatus(inscricao.id, "pendente")}
-                                className="text-blue-600"
-                              >
-                                <Clock className="w-4 h-4 mr-2" />
-                                Pendente
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => updateInscricaoStatus(inscricao.id, "confirmada")}
-                                className="text-green-600"
-                              >
-                                <Check className="w-4 h-4 mr-2" />
-                                Confirmada
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => updateInscricaoStatus(inscricao.id, "cancelada")}
-                                className="text-red-600"
-                              >
-                                <AlertTriangle className="w-4 h-4 mr-2" />
-                                Cancelada
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => updateInscricaoStatus(inscricao.id, "inativo")}
-                                className="text-gray-600"
-                              >
-                                <EyeOff className="w-4 h-4 mr-2" />
-                                Inativo
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
             </CardContent>
           </div>
         </div>
