@@ -19,6 +19,9 @@ type EventRecord = {
   event_time_start?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  _count?: {
+    inscricoes: number;
+  };
 };
 
 type EventCreateInput = {
@@ -41,6 +44,13 @@ type EventsFindManyArgs = {
   where?: { status?: EventStatus };
   orderBy?: { event_date_start?: SortOrder };
   take?: number;
+  include?: {
+    _count: {
+      select: {
+        inscricoes: boolean;
+      };
+    };
+  };
 };
 
 type EventsCreateArgs = { data: EventCreateInput };
@@ -66,7 +76,17 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { event_date_start: "desc" },
       take: 200,
+      include: {
+        _count: {
+          select: {
+            inscricoes: true
+          }
+        }
+      }
     });
+    
+    console.log("Events with counts:", JSON.stringify(events, null, 2));
+    
     return NextResponse.json({ events }, { status: 200 });
   } catch (error) {
     console.error("GET /api/events erro:", error);

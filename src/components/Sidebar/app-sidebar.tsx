@@ -6,7 +6,6 @@ import * as React from "react";
 import {
   Home,
   Settings,
-  Calendar,
   Users,
   Heart,
   type LucideIcon,
@@ -65,6 +64,17 @@ export function AppSidebar({
     };
   }, []);
 
+  const coordGroup = {
+    title: "Coordenação",
+    url: "#",
+    icon: Users,
+    items: [
+      { title: "Dashboard Coord", url: "/coord" },
+      { title: "Gerenciar Eventos", url: "/eventos" },
+      { title: "Usuários", url: "/admin/usuarios" },
+    ],
+  };
+
   const adminGroup = {
     title: "Administração",
     url: "#",
@@ -93,6 +103,7 @@ export function AppSidebar({
       icon: item.icon,
     })),
 
+    ...(can(role, "COORD") ? [coordGroup] : []),
     ...(can(role, "ADMIN") ? [adminGroup] : []),
   ];
 

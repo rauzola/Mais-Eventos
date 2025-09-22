@@ -159,7 +159,7 @@ enum InscricaoStatus {
   pendente
   confirmada
   cancelada
-  rejeitada
+  inativo
 }
 
 model InscricaoEvento {
