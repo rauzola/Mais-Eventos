@@ -1,6 +1,7 @@
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma-vercel";
+import { LogoutButton } from "@/components/LogoutButton";
 
 // Force dynamic rendering since this page uses cookies
 export const dynamic = 'force-dynamic';
@@ -12,25 +13,27 @@ export default async function Home() {
     const authSession = cookieStore.get("auth-session");
 
     if (!authSession?.value) {
+      // Se não estiver autenticado, redireciona para o login
       redirect("/login");
     }
 
-    // Verifica se a sessão é válida
+    // Busca informações do usuário
     const session = await prisma.sessions.findFirst({
       where: {
         token: authSession.value,
         valid: true,
-        expiresAt: {
-          gt: new Date(),
-        },
+        expiresAt: { gt: new Date() }
       },
+      include: {
+        User: true
+      }
     });
 
     if (!session) {
+      // Sessão inválida, redireciona para login
       redirect("/login");
     }
 
-    // Se chegou aqui, o usuário está autenticado
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-2xl w-full bg-white rounded-lg shadow-md p-8 text-center">
@@ -46,11 +49,15 @@ export default async function Home() {
               Em breve teremos novidades! 📅
             </p>
           </div>
+          
+          <div className="mt-8">
+            <LogoutButton />
+          </div>
         </div>
       </div>
     );
   } catch (error) {
-    console.error("Erro na página inicial:", error);
+    console.error("Erro no dashboard:", error);
     redirect("/login");
   }
 }
