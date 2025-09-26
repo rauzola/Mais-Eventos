@@ -773,7 +773,7 @@ export const DadosPessoais = ({
            )}
         
         <div className="md:col-span-2">
-          <Label htmlFor="arquivo">Documento/Comprovante *</Label>
+          <Label htmlFor="arquivo">Comprovante *</Label>
           <div className="mt-2">
             {!data.arquivo ? (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
