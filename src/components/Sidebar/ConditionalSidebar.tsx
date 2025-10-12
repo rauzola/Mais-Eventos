@@ -25,6 +25,7 @@ export function ConditionalSidebar({
   
   // Rotas que DEVEM mostrar o sidebar
   const showSidebarRoutes = [
+    "/",
     "/dashboard",
     "/admin",
     "/eventos",
