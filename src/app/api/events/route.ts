@@ -24,6 +24,10 @@ type EventRecord = {
   };
 };
 
+type EventWithInscricoes = EventRecord & {
+  inscricoes: Array<{ id: string; status: string }>;
+};
+
 type EventCreateInput = {
   title: string;
   short_description?: string | null;
@@ -45,9 +49,20 @@ type EventsFindManyArgs = {
   orderBy?: { event_date_start?: SortOrder };
   take?: number;
   include?: {
-    _count: {
+    _count?: {
       select: {
         inscricoes: boolean;
+      };
+    };
+    inscricoes?: {
+      where?: {
+        status: {
+          in: string[];
+        };
+      };
+      select?: {
+        id: boolean;
+        status: boolean;
       };
     };
   };
@@ -77,17 +92,32 @@ export async function GET(request: NextRequest) {
       orderBy: { event_date_start: "desc" },
       take: 200,
       include: {
-        _count: {
+        inscricoes: {
+          where: {
+            status: {
+              in: ["pendente", "confirmada"]
+            }
+          },
           select: {
-            inscricoes: true
+            id: true,
+            status: true
           }
         }
       }
-    });
+    }) as EventWithInscricoes[];
+
+    // Transformar os dados para manter compatibilidade com o frontend
+    const eventsWithCount = events.map(event => ({
+      ...event,
+      _count: {
+        inscricoes: event.inscricoes?.length || 0
+      },
+      inscricoes: undefined // Remover o array de inscrições para não enviar dados desnecessários
+    }));
     
-    console.log("Events with counts:", JSON.stringify(events, null, 2));
+    console.log("Events with counts:", JSON.stringify(eventsWithCount, null, 2));
     
-    return NextResponse.json({ events }, { status: 200 });
+    return NextResponse.json({ events: eventsWithCount }, { status: 200 });
   } catch (error) {
     console.error("GET /api/events erro:", error);
     return NextResponse.json({ error: "Erro ao listar eventos" }, { status: 500 });
