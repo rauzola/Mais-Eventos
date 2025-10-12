@@ -275,6 +275,20 @@ export default function CoordEventDetailPage() {
   };
 
 
+  const escapeCSVField = (field: string | null | undefined): string => {
+    if (!field) return "";
+    
+    const stringField = String(field);
+    
+    // Se contém vírgula, quebra de linha ou aspas, precisa ser envolvido em aspas
+    if (stringField.includes(",") || stringField.includes("\n") || stringField.includes("\"") || stringField.includes("\r")) {
+      // Escapar aspas duplas duplicando-as
+      return `"${stringField.replace(/"/g, '""')}"`;
+    }
+    
+    return stringField;
+  };
+
   const exportToCSV = () => {
     const headers = [
       "Nome",
@@ -302,44 +316,59 @@ export default function CoordEventDetailPage() {
       "Data Confirmação",
     ];
 
-    const csvContent = [
-      headers.join(","),
+    const csvRows = [
+      headers.map(header => escapeCSVField(header)).join(","),
       ...inscricoesFiltradas.map(inscricao => [
-        inscricao.user.nomeCompleto || "",
-        inscricao.user.email,
-        inscricao.user.cpf || "",
-        inscricao.user.dataNascimento ? formatDate(inscricao.user.dataNascimento.toString()) : "",
-        getEstadoCivilLabel(inscricao.user.estadoCivil),
-        inscricao.user.tamanhoCamiseta || "",
-        inscricao.user.profissao || "",
-        inscricao.user.telefone || "",
-        inscricao.user.contatoEmergencia || "",
-        inscricao.user.telefoneEmergencia || "",
-        inscricao.user.cidade || "",
-        inscricao.user.portadorDoenca || "",
-        inscricao.user.alergiaIntolerancia || "",
-        inscricao.user.medicacaoUso || "",
-        inscricao.user.restricaoAlimentar || "",
-        inscricao.user.operadora || "",
-        inscricao.user.numeroPlano || "",
-        inscricao.arquivoUrl || "",
-        inscricao.nomeArquivo || "",
-        getStatusLabel(inscricao.status),
-        getFrenteLabel(inscricao.frente),
-        formatDateTime(inscricao.dataInscricao),
-        inscricao.dataConfirmacao ? formatDateTime(inscricao.dataConfirmacao) : "",
+        escapeCSVField(inscricao.user.nomeCompleto),
+        escapeCSVField(inscricao.user.email),
+        escapeCSVField(inscricao.user.cpf),
+        escapeCSVField(inscricao.user.dataNascimento ? formatDate(inscricao.user.dataNascimento.toString()) : ""),
+        escapeCSVField(getEstadoCivilLabel(inscricao.user.estadoCivil)),
+        escapeCSVField(inscricao.user.tamanhoCamiseta),
+        escapeCSVField(inscricao.user.profissao),
+        escapeCSVField(inscricao.user.telefone),
+        escapeCSVField(inscricao.user.contatoEmergencia),
+        escapeCSVField(inscricao.user.telefoneEmergencia),
+        escapeCSVField(inscricao.user.cidade),
+        escapeCSVField(inscricao.user.portadorDoenca),
+        escapeCSVField(inscricao.user.alergiaIntolerancia),
+        escapeCSVField(inscricao.user.medicacaoUso),
+        escapeCSVField(inscricao.user.restricaoAlimentar),
+        escapeCSVField(inscricao.user.operadora),
+        escapeCSVField(inscricao.user.numeroPlano),
+        escapeCSVField(inscricao.arquivoUrl),
+        escapeCSVField(inscricao.nomeArquivo),
+        escapeCSVField(getStatusLabel(inscricao.status)),
+        escapeCSVField(getFrenteLabel(inscricao.frente)),
+        escapeCSVField(formatDateTime(inscricao.dataInscricao)),
+        escapeCSVField(inscricao.dataConfirmacao ? formatDateTime(inscricao.dataConfirmacao) : ""),
       ].join(","))
-    ].join("\n");
+    ];
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const csvContent = csvRows.join("\n");
+    
+    // Adicionar BOM para UTF-8 para garantir que caracteres especiais sejam exibidos corretamente
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+    
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `inscricoes_${event?.title || eventId}.csv`);
+    
+    // Limpar nome do arquivo para evitar caracteres inválidos
+    const cleanEventTitle = (event?.title || eventId || "evento")
+      .replace(/[^\w\s-]/g, "") // Remove caracteres especiais
+      .replace(/\s+/g, "_") // Substitui espaços por underscore
+      .toLowerCase();
+    
+    link.setAttribute("download", `inscricoes_${cleanEventTitle}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    // Limpar URL do objeto para liberar memória
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
