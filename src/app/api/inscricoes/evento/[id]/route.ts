@@ -73,7 +73,7 @@ export async function GET(
 
     // Estatísticas das inscrições
     const stats = {
-      total: inscricoes.length,
+      total: inscricoes.filter(i => i.status === "confirmada" || i.status === "pendente").length,
       confirmadas: inscricoes.filter(i => i.status === "confirmada").length,
       pendentes: inscricoes.filter(i => i.status === "pendente").length,
       canceladas: inscricoes.filter(i => i.status === "cancelada").length,
