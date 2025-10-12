@@ -57,6 +57,7 @@ export interface CadastroData {
 
 interface RegisterFormContentProps {
   eventId: string;
+  isListaEspera?: boolean;
   event?: {
     id: string;
     title: string;
@@ -87,7 +88,7 @@ interface RegisterFormContentProps {
   };
 }
 
-function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
+function RegisterFormContent({ eventId, event, isListaEspera = false }: RegisterFormContentProps) {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
 
@@ -201,6 +202,9 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
         
         // Evento
         eventId: eventId,
+        
+        // Lista de Espera
+        isListaEspera: isListaEspera,
       };
       
       formDataToSend.append("data", JSON.stringify(dataToSend));
@@ -249,6 +253,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
             onNext={handleNext}
             setFormError={setFormError}
             event={event}
+            isListaEspera={isListaEspera}
           />
         );
       case 2:
@@ -450,6 +455,7 @@ function RegisterFormContent({ eventId, event }: RegisterFormContentProps) {
 
 interface RegisterFormProps {
   eventId: string;
+  isListaEspera?: boolean;
   event?: {
     id: string;
     title: string;
@@ -480,10 +486,10 @@ interface RegisterFormProps {
   };
 }
 
-export function RegisterForm({ eventId, event }: RegisterFormProps) {
+export function RegisterForm({ eventId, event, isListaEspera = false }: RegisterFormProps) {
   return (
     <ToastProvider>
-      <RegisterFormContent eventId={eventId} event={event} />
+      <RegisterFormContent eventId={eventId} event={event} isListaEspera={isListaEspera} />
     </ToastProvider>
   );
 }

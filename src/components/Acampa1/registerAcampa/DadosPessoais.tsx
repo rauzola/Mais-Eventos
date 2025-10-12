@@ -20,6 +20,7 @@ interface DadosPessoaisProps {
   event?: {
     participant_type?: string | null;
   };
+  isListaEspera?: boolean;
 }
 
 export const DadosPessoais = ({ 
@@ -28,7 +29,8 @@ export const DadosPessoais = ({
   onPrevious,
   onNext, 
   setFormError,
-  event
+  event,
+  isListaEspera = false
 }: DadosPessoaisProps) => {
   const { showError } = useToast();
   const [passwordValidation, setPasswordValidation] = useState<{
@@ -181,15 +183,17 @@ export const DadosPessoais = ({
       return;
     }
     
-    // Validação do arquivo
-    if (!data.arquivo) {
-      showError("Upload de arquivo é obrigatório");
-      return;
-    }
-    
-    if (!arquivoValidation.isValid) {
-      showError(arquivoValidation.message);
-      return;
+    // Validação do arquivo (não obrigatório para lista de espera)
+    if (!isListaEspera) {
+      if (!data.arquivo) {
+        showError("Upload de arquivo é obrigatório");
+        return;
+      }
+      
+      if (!arquivoValidation.isValid) {
+        showError(arquivoValidation.message);
+        return;
+      }
     }
     
     // Validação da senha usando a nova função
@@ -772,6 +776,7 @@ export const DadosPessoais = ({
         </div>
            )}
         
+        {!isListaEspera && (
         <div className="md:col-span-2">
           <Label htmlFor="arquivo">Comprovante *</Label>
           <div className="mt-2">
@@ -846,6 +851,7 @@ export const DadosPessoais = ({
             )}
           </div>
         </div>
+        )}
         
         <div className="md:col-span-2">
           <div className="h-px bg-border my-6"></div>

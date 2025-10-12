@@ -43,6 +43,9 @@ interface RegisterAcampaRequest {
   
   // Evento
   eventId: string;
+  
+  // Lista de Espera
+  isListaEspera?: boolean;
 }
 
 interface RegisterAcampaResponse {
@@ -58,27 +61,32 @@ export async function POST(request: NextRequest) {
     const jsonData = formData.get("data") as string;
     const data = JSON.parse(jsonData) as RegisterAcampaRequest;
 
-    // Verificar se o arquivo foi enviado
-    if (!file) {
+    // Verificar se é lista de espera
+    const isListaEspera = data.isListaEspera || false;
+
+    // Verificar se o arquivo foi enviado (não obrigatório para lista de espera)
+    if (!isListaEspera && !file) {
       return NextResponse.json(
         { error: "Arquivo é obrigatório" },
         { status: 400 }
       );
     }
 
-    // Validar tipo e tamanho do arquivo
-    if (!(file.type.startsWith("image/") || file.type === "application/pdf")) {
-      return NextResponse.json(
-        { error: "Apenas arquivos de imagem ou PDF são permitidos" },
-        { status: 400 }
-      );
-    }
+    // Validar tipo e tamanho do arquivo (apenas se não for lista de espera)
+    if (!isListaEspera && file) {
+      if (!(file.type.startsWith("image/") || file.type === "application/pdf")) {
+        return NextResponse.json(
+          { error: "Apenas arquivos de imagem ou PDF são permitidos" },
+          { status: 400 }
+        );
+      }
 
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "Arquivo deve ser de até 10MB" },
-        { status: 400 }
-      );
+      if (file.size > 10 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "Arquivo deve ser de até 10MB" },
+          { status: 400 }
+        );
+      }
     }
 
     // Validações básicas
@@ -146,54 +154,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload do arquivo para o Supabase
-    // Data e hora no fuso horário de São Paulo (UTC-3)
-    const now = new Date();
-    const saoPauloTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
-    
-    // Formatar data como dd/mm/aa
-    const day = String(saoPauloTime.getUTCDate()).padStart(2, '0');
-    const month = String(saoPauloTime.getUTCMonth() + 1).padStart(2, '0');
-    const year = String(saoPauloTime.getUTCFullYear()).slice(-2);
-    const formattedDate = `${day}/${month}/${year}`;
-    
-    // Formatar hora como hh:mm
-    const hours = String(saoPauloTime.getUTCHours()).padStart(2, '0');
-    const minutes = String(saoPauloTime.getUTCMinutes()).padStart(2, '0');
-    const formattedTime = `${hours}:${minutes}`;
+    // Upload do arquivo para o Supabase (apenas se não for lista de espera)
+    let publicUrlData: { publicUrl: string } | null = null;
+    let filename: string | null = null;
+    let fileType: string | null = null;
+    let fileSize: number | null = null;
 
-    // Nome do arquivo: nomeCompleto_data_hora_nomeEvento.extensao
-    const nomeEvento = event.title.toLowerCase().replace(/[^a-z0-9]/g, "_");
-    const nomeCompleto = data.nomeCompleto.toLowerCase().replace(/[^a-z0-9]/g, "_");
-    const extensao = file.name.split(".").pop();
-    const filename = `${nomeCompleto}_${formattedDate.replace(/\//g, "-")}_${formattedTime.replace(/:/g, "-")}_${nomeEvento}.${extensao}`;
+    if (!isListaEspera && file) {
+      // Data e hora no fuso horário de São Paulo (UTC-3)
+      const now = new Date();
+      const saoPauloTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
+      
+      // Formatar data como dd/mm/aa
+      const day = String(saoPauloTime.getUTCDate()).padStart(2, '0');
+      const month = String(saoPauloTime.getUTCMonth() + 1).padStart(2, '0');
+      const year = String(saoPauloTime.getUTCFullYear()).slice(-2);
+      const formattedDate = `${day}/${month}/${year}`;
+      
+      // Formatar hora como hh:mm
+      const hours = String(saoPauloTime.getUTCHours()).padStart(2, '0');
+      const minutes = String(saoPauloTime.getUTCMinutes()).padStart(2, '0');
+      const formattedTime = `${hours}:${minutes}`;
 
-    const filePath = `acampa/${data.eventId}/${filename}`;
+      // Nome do arquivo: nomeCompleto_data_hora_nomeEvento.extensao
+      const nomeEvento = event.title.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const nomeCompleto = data.nomeCompleto.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const extensao = file.name.split(".").pop();
+      filename = `${nomeCompleto}_${formattedDate.replace(/\//g, "-")}_${formattedTime.replace(/:/g, "-")}_${nomeEvento}.${extensao}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("AcampaNovembro")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+      const filePath = `acampa/${data.eventId}/${filename}`;
 
-    if (uploadError) {
-      return NextResponse.json(
-        { error: "Erro ao fazer upload do arquivo: " + uploadError.message },
-        { status: 500 }
-      );
-    }
+      const { error: uploadError } = await supabase.storage
+        .from("AcampaNovembro")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-    // Obter URL pública
-    const { data: publicUrlData } = supabase.storage
-      .from("AcampaNovembro")
-      .getPublicUrl(filePath);
+      if (uploadError) {
+        return NextResponse.json(
+          { error: "Erro ao fazer upload do arquivo: " + uploadError.message },
+          { status: 500 }
+        );
+      }
 
-    if (!publicUrlData?.publicUrl) {
-      return NextResponse.json(
-        { error: "Erro ao obter URL pública do arquivo" },
-        { status: 500 }
-      );
+      // Obter URL pública
+      const { data: publicUrlDataResult } = supabase.storage
+        .from("AcampaNovembro")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlDataResult?.publicUrl) {
+        return NextResponse.json(
+          { error: "Erro ao obter URL pública do arquivo" },
+          { status: 500 }
+        );
+      }
+
+      publicUrlData = publicUrlDataResult;
+      fileType = file.type;
+      fileSize = file.size;
     }
 
     // Hash da senha
@@ -318,13 +337,14 @@ export async function POST(request: NextRequest) {
       eventId: data.eventId,
       status: "pendente" as const,
       frente: mapFrenteToEnum(data.frente || "campista"),
-      arquivoUrl: publicUrlData.publicUrl,
-      nomeArquivo: filename, // Usar o nome do arquivo gerado
-      tipoArquivo: file.type,
-      tamanhoArquivo: file.size,
+      arquivoUrl: publicUrlData?.publicUrl || null,
+      nomeArquivo: filename,
+      tipoArquivo: fileType,
+      tamanhoArquivo: fileSize,
       dadosAdicionais: {
         dataInscricao: new Date().toISOString(),
-        tipoEvento: "acampamento"
+        tipoEvento: isListaEspera ? "acampamento_lista_espera" : "acampamento",
+        isListaEspera: isListaEspera
       }
     };
 
@@ -359,7 +379,7 @@ export async function POST(request: NextRequest) {
           termo2: data.termo2,
           termo3: data.termo3,
           frente: data.frente,
-          arquivoUrl: publicUrlData.publicUrl,
+          arquivoUrl: publicUrlData?.publicUrl || undefined,
           eventTitle: event.title,
           eventDateStart: event.event_date_start ? new Date(event.event_date_start).toLocaleDateString('pt-BR') : undefined,
           eventDateEnd: event.event_date_end ? new Date(event.event_date_end).toLocaleDateString('pt-BR') : undefined
@@ -373,7 +393,9 @@ export async function POST(request: NextRequest) {
           .replace(/\s+/g, ' ')
           .trim();
         
-        const subject = `Bem-vindo(a) ao ${cleanEventTitle}! ⛪`;
+        const subject = isListaEspera 
+          ? `Lista de Espera - ${cleanEventTitle} ⛪`
+          : `Bem-vindo(a) ao ${cleanEventTitle}! ⛪`;
 
         const { error: emailError } = await resend.emails.send({
           from: `${process.env.EMAIL_FROM}`,

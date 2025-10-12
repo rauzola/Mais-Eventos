@@ -160,6 +160,7 @@ enum InscricaoStatus {
   confirmada
   cancelada
   inativo
+  espera
 }
 
 model InscricaoEvento {
