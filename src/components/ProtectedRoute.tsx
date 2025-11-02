@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface ProtectedRouteProps {
@@ -17,6 +17,12 @@ export default function ProtectedRoute({
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+  // Memoize allowedRoles to prevent unnecessary re-runs
+  const allowedRolesString = useMemo(
+    () => JSON.stringify(allowedRoles.sort()),
+    [allowedRoles]
+  );
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,7 +57,8 @@ export default function ProtectedRoute({
     };
 
     checkAuth();
-  }, [allowedRoles, redirectTo, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedRolesString, redirectTo]);
 
   if (isLoading) {
     return (

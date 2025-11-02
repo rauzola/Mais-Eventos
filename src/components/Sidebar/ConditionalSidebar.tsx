@@ -29,7 +29,8 @@ export function ConditionalSidebar({
     "/dashboard",
     "/admin",
     "/eventos",
-    "/coord"
+    "/coord",
+    "/site"
   ];
   
   // Verificar se deve mostrar o sidebar

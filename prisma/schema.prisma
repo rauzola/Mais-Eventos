@@ -198,3 +198,32 @@ model InscricaoEvento {
   @@unique([userId, eventId])
   @@map("inscricoes_eventos")
 }
+
+// --- Comunidades ---
+enum CorTema {
+  blue
+  green
+  purple
+  red
+  amber
+  pink
+  indigo
+  teal
+}
+
+model Comunidades {
+  id                  String              @id @default(cuid())
+  nome                String
+  descricao           String              @default("")
+  brasao_url          String?
+  foto_comunidade_url String?
+  data_primeiro_acampa DateTime
+  data_segundo_acampa DateTime?
+  data_envio          DateTime?
+  assessores          String?
+  cor_tema            CorTema             @default(blue)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  @@map("comunidades")
+}

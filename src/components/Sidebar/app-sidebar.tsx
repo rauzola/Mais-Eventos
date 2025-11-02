@@ -8,6 +8,7 @@ import {
   Settings,
   Users,
   Heart,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -64,6 +65,15 @@ export function AppSidebar({
     };
   }, []);
 
+  const concelhoGroup = {
+    title: "Comunidades",
+    url: "#",
+    icon: Building2,
+    items: [
+      { title: "Gerenciar Comunidades", url: "/site/comunidades" },
+    ],
+  };
+
   const coordGroup = {
     title: "Coordenação",
     url: "#",
@@ -103,6 +113,7 @@ export function AppSidebar({
       icon: item.icon,
     })),
 
+    ...(can(role, "CONCELHO") ? [concelhoGroup] : []),
     ...(can(role, "COORD") ? [coordGroup] : []),
     ...(can(role, "ADMIN") ? [adminGroup] : []),
   ];
